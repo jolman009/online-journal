@@ -50,6 +50,36 @@ async function addEntry(entry) {
 }
 
 /**
+ * Create an entry card DOM element for rendering.
+ * @param {Object} entry
+ * @returns {HTMLElement}
+ */
+function createEntryCard(entry) {
+    const card = document.createElement('article');
+    card.className = 'entry-card';
+
+    const title = document.createElement('h3');
+    title.textContent = entry.title;
+
+    const timeEl = document.createElement('time');
+    const dateObj = new Date(`${entry.date}T00:00:00Z`);
+    timeEl.textContent = dateObj.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timeZone: 'UTC'
+    });
+
+    const content = document.createElement('p');
+    content.textContent = entry.content;
+
+    card.appendChild(title);
+    card.appendChild(timeEl);
+    card.appendChild(content);
+    return card;
+}
+
+/**
  * Initialize the journal page by rendering entries.
  */
 async function initJournalPage() {
@@ -62,38 +92,19 @@ async function initJournalPage() {
     if (!container) return;
 
     const entries = await getEntries();
+    window._journalEntries = entries;
 
     if (entries.length === 0) {
         const p = document.createElement('p');
         p.textContent = 'No entries yet. Use the "Add Entry" page to begin your journal.';
         container.appendChild(p);
-        return;
+    } else {
+        entries.forEach(entry => {
+            container.appendChild(createEntryCard(entry));
+        });
     }
 
-    entries.forEach(entry => {
-        const card = document.createElement('article');
-        card.className = 'entry-card';
-
-        const title = document.createElement('h3');
-        title.textContent = entry.title;
-
-        const timeEl = document.createElement('time');
-        const dateObj = new Date(`${entry.date}T00:00:00Z`);
-        timeEl.textContent = dateObj.toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            timeZone: 'UTC'
-        });
-
-        const content = document.createElement('p');
-        content.textContent = entry.content;
-
-        card.appendChild(title);
-        card.appendChild(timeEl);
-        card.appendChild(content);
-        container.appendChild(card);
-    });
+    initJournalCalendarWidget(entries);
 }
 
 /**
@@ -107,6 +118,14 @@ async function initNewEntryPage() {
 
     const form = document.getElementById('entryForm');
     if (!form) return;
+
+    // Pre-fill date from URL param if present (e.g. ?date=2026-01-15)
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillDate = urlParams.get('date');
+    if (prefillDate) {
+        const dateInput = document.getElementById('date');
+        if (dateInput) dateInput.value = prefillDate;
+    }
 
     const templates = {
         daily: `# YYYY-MM-DD — Day of the Week\n\n## Morning Intention\nWhat is the one thing this day is for?\n\n- \n\n## Reading\nWhat did I read today? What stayed with me?\n\n- Book / Article:\n- Pages:\n- Thought:\n\n## Work / Craft\nWhat did I *actually* work on?\n\n- \n\n## Personal / Family\nMoments that mattered.\n\n- `,
@@ -172,5 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initJournalPage();
     } else if (page === 'new-entry') {
         initNewEntryPage();
+    } else if (page === 'calendar') {
+        initCalendarPage();
     }
 });
