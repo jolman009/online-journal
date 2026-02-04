@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="supabase.js"></script>
     <script defer src="calendar.js"></script>
+    <script defer src="todos.js"></script>
     <script defer src="journal.js"></script>
 </head>
 <body data-page="journal">
@@ -21,6 +22,7 @@
                 <li><a href="index.html">Home</a></li>
                 <li><a href="journal.html" class="is-active">View Journal</a></li>
                 <li><a href="calendar.html">Calendar</a></li>
+                <li><a href="todos.html">Todos</a></li>
                 <li><a href="new-entry.html" class="pill">Add Entry</a></li>
             </ul>
         </nav>
@@ -35,6 +37,7 @@
             <a class="btn primary" href="new-entry.html">Add new entry</a>
         </div>
         <div id="calendarWidget" class="calendar-widget"></div>
+        <div id="todosWidget" class="calendar-widget todo-widget"></div>
         <div id="calendarFilterBar" class="calendar-filter-bar" style="display:none;">
             <span class="filter-date-label"></span>
             <div class="calendar-filter-bar__actions">

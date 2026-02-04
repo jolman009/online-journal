@@ -27,10 +27,12 @@ function buildEntryDateSet(entries) {
  * @param {Set<string>} entryDateSet
  * @param {Object} options
  * @param {boolean} [options.compact] - compact mode for journal widget
+ * @param {Set<string>} [options.todoDateSet] - dates with pending todos
  * @param {function} [options.onDateClick] - callback(dateStr)
  */
 function renderCalendar(container, year, month, entryDateSet, options) {
     options = options || {};
+    var todoDateSet = options.todoDateSet || new Set();
     container.innerHTML = '';
 
     const today = new Date();
@@ -115,11 +117,25 @@ function renderCalendar(container, year, month, entryDateSet, options) {
             cell.classList.add('cal-cell--today');
         }
 
-        if (entryDateSet.has(dateStr)) {
+        var hasEntry = entryDateSet.has(dateStr);
+        var hasTodo = todoDateSet.has(dateStr);
+
+        if (hasEntry || hasTodo) {
             cell.classList.add('cal-cell--has-entry');
-            const dot = document.createElement('span');
-            dot.className = 'cal-dot';
-            cell.appendChild(dot);
+            var dotContainer = document.createElement('span');
+            dotContainer.className = 'cal-dots';
+
+            if (hasEntry) {
+                var entryDot = document.createElement('span');
+                entryDot.className = 'cal-dot cal-dot--entry';
+                dotContainer.appendChild(entryDot);
+            }
+            if (hasTodo) {
+                var todoDot = document.createElement('span');
+                todoDot.className = 'cal-dot cal-dot--todo';
+                dotContainer.appendChild(todoDot);
+            }
+            cell.appendChild(dotContainer);
         }
 
         cell.addEventListener('click', () => {
@@ -155,24 +171,28 @@ async function initCalendarPage() {
     updateNavForAuth();
 
     const entries = await getEntries();
+    const todos = await getTodos();
     const entryDateSet = buildEntryDateSet(entries);
+    const todoDateSet = buildTodoDateSet(todos);
     const container = document.getElementById('calendarContainer');
     if (!container) return;
 
     const now = new Date();
     renderCalendar(container, now.getFullYear(), now.getMonth(), entryDateSet, {
+        todoDateSet: todoDateSet,
         onDateClick: function(dateStr) {
-            showEntriesForDate(dateStr, entries);
+            showEntriesForDate(dateStr, entries, todos);
         }
     });
 }
 
 /**
- * Show entry cards for a specific date below the calendar on calendar.html.
+ * Show entry cards and todos for a specific date below the calendar on calendar.html.
  * @param {string} dateStr - YYYY-MM-DD
  * @param {Array<Object>} entries
+ * @param {Array<Object>} [todos]
  */
-function showEntriesForDate(dateStr, entries) {
+function showEntriesForDate(dateStr, entries, todos) {
     const panel = document.getElementById('calendarEntries');
     if (!panel) return;
 
@@ -214,21 +234,41 @@ function showEntriesForDate(dateStr, entries) {
         });
         panel.appendChild(grid);
     }
+
+    // Todos for this date
+    todos = todos || [];
+    const matchingTodos = todos.filter(t => t.date === dateStr);
+    if (matchingTodos.length > 0) {
+        const todoHeader = document.createElement('h4');
+        todoHeader.className = 'calendar-todos__heading';
+        todoHeader.textContent = 'Tasks for this date';
+        panel.appendChild(todoHeader);
+
+        const todoList = document.createElement('div');
+        todoList.className = 'todo-list';
+        matchingTodos.forEach(todo => {
+            todoList.appendChild(createTodoItem(todo));
+        });
+        panel.appendChild(todoList);
+    }
 }
 
 /**
  * Initialize the compact calendar widget on journal.html.
  * @param {Array<Object>} entries
+ * @param {Array<Object>} [todos]
  */
-function initJournalCalendarWidget(entries) {
+function initJournalCalendarWidget(entries, todos) {
     const container = document.getElementById('calendarWidget');
     if (!container) return;
 
     const entryDateSet = buildEntryDateSet(entries);
+    const todoDateSet = buildTodoDateSet(todos || []);
     const now = new Date();
 
     renderCalendar(container, now.getFullYear(), now.getMonth(), entryDateSet, {
         compact: true,
+        todoDateSet: todoDateSet,
         onDateClick: function(dateStr) {
             filterJournalEntries(dateStr, entries);
         }

@@ -70,8 +70,14 @@ function createEntryCard(entry) {
         timeZone: 'UTC'
     });
 
-    const content = document.createElement('p');
-    content.textContent = entry.content;
+    const content = document.createElement('div');
+    content.className = 'entry-card__content';
+    // Escape HTML then preserve line breaks
+    const escaped = entry.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    content.innerHTML = escaped.replace(/\n/g, '<br>');
 
     card.appendChild(title);
     card.appendChild(timeEl);
@@ -92,6 +98,7 @@ async function initJournalPage() {
     if (!container) return;
 
     const entries = await getEntries();
+    const todos = await getTodos();
     window._journalEntries = entries;
 
     if (entries.length === 0) {
@@ -104,7 +111,12 @@ async function initJournalPage() {
         });
     }
 
-    initJournalCalendarWidget(entries);
+    initJournalCalendarWidget(entries, todos);
+
+    const todosWidget = document.getElementById('todosWidget');
+    if (todosWidget) {
+        renderTodosWidget(todosWidget, todos);
+    }
 }
 
 /**
@@ -128,11 +140,11 @@ async function initNewEntryPage() {
     }
 
     const templates = {
-        daily: `# YYYY-MM-DD — Day of the Week\n\n## Morning Intention\nWhat is the one thing this day is for?\n\n- \n\n## Reading\nWhat did I read today? What stayed with me?\n\n- Book / Article:\n- Pages:\n- Thought:\n\n## Work / Craft\nWhat did I *actually* work on?\n\n- \n\n## Personal / Family\nMoments that mattered.\n\n- `,
-        weekly: `# Week XX — YYYY\nTheme: (A single word or phrase)\n\n## Focus of the Week\nIf nothing else happens, this must happen:\n\n- \n\n## Reading Goals\nBe realistic. Slow is still forward.\n\n- Book:\n- Target:\n\n## Writing / Journaling Goals\nWhat do I want to *say* this week?\n\n- \n\n## Life & Relationships\nWho needs my presence?\n\n- \n\n## Tasks (Only What Matters)\n- [ ] \n- [ ] \n- [ ] \n\n## Notes & Adjustments\nWhat needs to change midweek?\n\n\n## Reflection\nWhat went well?\nWhat felt heavy?\nWhat deserves gratitude?\n\n- \n\n## Closing Thought\nOne sentence to carry into tomorrow.`,
-        reflection: `# Reflection — YYYY-MM-DD\n\n## What I Learned\nAbout myself, others, or the world.\n\n- \n\n## What I Read That Changed Me\nA sentence, an idea, a shift.\n\n- \n\n## Patterns I Notice\nGood or bad—name them.\n\n- \n\n## What I Need Less Of\nBe honest.\n\n- \n\n## What I Need More Of\nAlso be honest.\n\n- \n\n## One Decision Going Forward\nSmall. Concrete. Real.`,
-        book: `# Book Title — Author\n\n## Why I'm Reading This\nWhat called me to it?\n\n- \n\n## Key Ideas\n- \n- \n- \n\n## Quotes Worth Keeping\n> ""\n\n## My Response\nAgreement, resistance, questions.\n\n- \n\n## Where This Fits in My Life\nWhat does this book ask of me?\n\n`,
-        personal: `# Personal Index\n\n## Current Reading\n- \n\n## Current Focus\n- \n\n## Open Questions\n- \n\n## Ideas to Revisit\n- \n`
+        daily: `YYYY-MM-DD — DAY OF THE WEEK\n\nMORNING INTENTION\nWhat is the one thing this day is for?\n\n- \n\nREADING\nWhat did I read today? What stayed with me?\n\n- Book / Article:\n- Pages:\n- Thought:\n\nWORK / CRAFT\nWhat did I actually work on?\n\n- \n\nPERSONAL / FAMILY\nMoments that mattered.\n\n- `,
+        weekly: `WEEK XX — YYYY\nTheme: (A single word or phrase)\n\nFOCUS OF THE WEEK\nIf nothing else happens, this must happen:\n\n- \n\nREADING GOALS\nBe realistic. Slow is still forward.\n\n- Book:\n- Target:\n\nWRITING / JOURNALING GOALS\nWhat do I want to say this week?\n\n- \n\nLIFE & RELATIONSHIPS\nWho needs my presence?\n\n- \n\nTASKS (ONLY WHAT MATTERS)\n- \n- \n- \n\nNOTES & ADJUSTMENTS\nWhat needs to change midweek?\n\n\nREFLECTION\nWhat went well?\nWhat felt heavy?\nWhat deserves gratitude?\n\n- \n\nCLOSING THOUGHT\nOne sentence to carry into tomorrow.`,
+        reflection: `REFLECTION — YYYY-MM-DD\n\nWHAT I LEARNED\nAbout myself, others, or the world.\n\n- \n\nWHAT I READ THAT CHANGED ME\nA sentence, an idea, a shift.\n\n- \n\nPATTERNS I NOTICE\nGood or bad—name them.\n\n- \n\nWHAT I NEED LESS OF\nBe honest.\n\n- \n\nWHAT I NEED MORE OF\nAlso be honest.\n\n- \n\nONE DECISION GOING FORWARD\nSmall. Concrete. Real.`,
+        book: `BOOK TITLE — AUTHOR\n\nWHY I'M READING THIS\nWhat called me to it?\n\n- \n\nKEY IDEAS\n- \n- \n- \n\nQUOTES WORTH KEEPING\n""\n\nMY RESPONSE\nAgreement, resistance, questions.\n\n- \n\nWHERE THIS FITS IN MY LIFE\nWhat does this book ask of me?\n\n`,
+        personal: `PERSONAL INDEX\n\nCURRENT READING\n- \n\nCURRENT FOCUS\n- \n\nOPEN QUESTIONS\n- \n\nIDEAS TO REVISIT\n- \n`
     };
 
     const templateSelect = document.getElementById('template');
@@ -193,5 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initNewEntryPage();
     } else if (page === 'calendar') {
         initCalendarPage();
+    } else if (page === 'todos') {
+        initTodosPage();
     }
 });

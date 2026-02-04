@@ -345,7 +345,8 @@ nav a.is-active {
     margin: 0.3rem 0 0.6rem;
 }
 
-.entry-card p {
+.entry-card p,
+.entry-card__content {
     margin: 0;
     color: var(--text);
 }
@@ -391,7 +392,7 @@ select:focus {
 }
 
 textarea {
-    height: 180px;
+    min-height: 420px;
     resize: vertical;
 }
 
@@ -610,6 +611,29 @@ input[type="password"]:focus {
     box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
+.cal-dots {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+}
+
+.cal-dot--entry {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-strong);
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.cal-dot--todo {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(125, 211, 252, 0.6);
+}
+
 .cal-day-num {
     line-height: 1;
 }
@@ -656,6 +680,200 @@ input[type="password"]:focus {
     align-items: center;
 }
 
+/* ===== Todo Components ===== */
+
+.todo-add-card {
+    margin-bottom: 1.5rem;
+}
+
+.todo-add-form {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.todo-add-form input[type="text"] {
+    flex: 1;
+    min-width: 0;
+}
+
+.todo-add-form input[type="date"] {
+    width: auto;
+    max-width: 180px;
+    flex-shrink: 0;
+}
+
+.todo-add-form .btn {
+    flex-shrink: 0;
+}
+
+.todo-section {
+    margin-bottom: 1.5rem;
+}
+
+.todo-section__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+}
+
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.todo-item:hover {
+    border-color: rgba(125, 211, 252, 0.3);
+}
+
+.todo-item--completed .todo-item__text {
+    text-decoration: line-through;
+    color: var(--muted);
+    opacity: 0.6;
+}
+
+.todo-item__checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-strong);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.todo-item__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.todo-item__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.todo-item__date-badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.15);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    color: var(--accent);
+    white-space: nowrap;
+}
+
+.todo-item__delete {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    transition: color 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.todo-item__delete:hover {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* Todo Widget (journal.html) */
+
+.todo-widget {
+    padding: 1rem 1.25rem;
+}
+
+.todo-widget__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.todo-widget__title {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.todo-widget__count {
+    font-size: 0.8rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.2);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.todo-widget__link {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.todo-widget__link:hover {
+    text-decoration: underline;
+}
+
+.todo-widget__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.todo-widget__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    padding: 0.3rem 0;
+}
+
+.todo-widget__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+
+.todo-widget__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Calendar Date Panel: Todos Heading */
+
+.calendar-todos__heading {
+    margin: 1.25rem 0 0.75rem;
+    font-size: 1rem;
+    color: var(--accent);
+}
+
 /* ===== Responsive ===== */
 
 @media (max-width: 700px) {
@@ -688,6 +906,15 @@ input[type="password"]:focus {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    .todo-add-form {
+        flex-direction: column;
+    }
+
+    .todo-add-form input[type="date"] {
+        max-width: 100%;
+        width: 100%;
+    }
 }
 
 @media (max-width: 400px) {
@@ -706,6 +933,15 @@ input[type="password"]:focus {
     }
 
     .cal-title {
+        font-size: 0.9rem;
+    }
+
+    .todo-item {
+        padding: 0.6rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .todo-item__text {
         font-size: 0.9rem;
     }
 }
