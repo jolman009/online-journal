@@ -66,7 +66,7 @@
 
         // If already logged in, go straight to journal
         (async () => {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) window.location.href = 'journal.html';
         })();
 
@@ -106,7 +106,7 @@
             authSubmit.textContent = isSignUp ? 'Creating account...' : 'Signing in...';
 
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({ email, password });
+                const { error } = await supabaseClient.auth.signUp({ email, password });
                 if (error) {
                     showMessage(error.message, true);
                 } else {
@@ -118,7 +118,7 @@
                     toggleLink.textContent = 'Create one';
                 }
             } else {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
                 if (error) {
                     showMessage(error.message, true);
                 } else {

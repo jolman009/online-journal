@@ -11,7 +11,7 @@
  * @returns {Promise<Array<Object>>} Array of entry objects.
  */
 async function getEntries() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('journal_entries')
         .select('*')
         .order('created_at', { ascending: false });
@@ -31,7 +31,7 @@ async function addEntry(entry) {
     const user = await getCurrentUser();
     if (!user) return;
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('journal_entries')
         .insert({
             user_id: user.id,
