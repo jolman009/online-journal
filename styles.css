@@ -409,6 +409,88 @@ footer {
     }
 }
 
+/* Auth / Login page */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-card h2 {
+    margin: 0 0 0.25rem;
+}
+
+.auth-card .muted {
+    margin: 0 0 1.25rem;
+}
+
+.auth-message {
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.auth-message.error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+.auth-message.success {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #86efac;
+}
+
+.auth-toggle {
+    text-align: center;
+    margin-top: 0.5rem;
+    color: var(--muted);
+}
+
+.auth-toggle a {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.auth-toggle a:hover {
+    text-decoration: underline;
+}
+
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--panel);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: rgba(125, 211, 252, 0.7);
+    box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.25);
+}
+
+#logoutLink {
+    color: var(--muted);
+}
+
+#logoutLink:hover {
+    color: #fca5a5;
+}
+
 @media (max-width: 700px) {
     .site-header {
         flex-direction: column;

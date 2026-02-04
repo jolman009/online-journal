@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Online Journal</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="supabase.js"></script>
 </head>
-<body>
+<body data-page="home">
     <header class="site-header">
         <div class="brand">
             <span class="logo-dot" aria-hidden="true"></span>
@@ -17,26 +19,27 @@
                 <li><a href="index.html" class="is-active">Home</a></li>
                 <li><a href="journal.html">View Journal</a></li>
                 <li><a href="new-entry.html" class="pill">Add Entry</a></li>
+                <li><a href="login.html" id="authNavLink">Sign In</a></li>
             </ul>
         </nav>
     </header>
     <main class="shell">
         <section class="hero">
             <div class="hero__text">
-                <p class="eyebrow">Private by design</p>
-                <h2>Write with clarity. Keep it on your device.</h2>
+                <p class="eyebrow">Synced across devices</p>
+                <h2>Write with clarity. Access from anywhere.</h2>
                 <p>
                     Capture moments, ideas, and reflections in a focused space.
-                    Entries stay in your browser’s storage—no accounts, no syncing.
+                    Entries sync securely to the cloud so you can write from any device.
                 </p>
                 <div class="hero__actions">
                     <a class="btn primary" href="new-entry.html">Start a new entry</a>
                     <a class="btn ghost" href="journal.html">Browse journal</a>
                 </div>
                 <div class="meta">
-                    <span class="meta__pill">Offline-first</span>
-                    <span class="meta__pill">Accessible</span>
-                    <span class="meta__pill">Responsive</span>
+                    <span class="meta__pill">Cloud-synced</span>
+                    <span class="meta__pill">Cross-device</span>
+                    <span class="meta__pill">Secure</span>
                 </div>
             </div>
             <div class="hero__card">
@@ -55,7 +58,7 @@
                     </p>
                     <ul class="checklist">
                         <li>Quick capture</li>
-                        <li>Local storage only</li>
+                        <li>Cloud storage</li>
                         <li>Sorted by recency</li>
                     </ul>
                 </div>
@@ -71,7 +74,7 @@
             <div class="feature-card">
                 <div class="icon">🔒</div>
                 <h3>Yours to keep</h3>
-                <p>Everything lives in your browser’s local storage. No servers, no sign‑ups.</p>
+                <p>Your entries are private, secured with your account, and synced across all your devices.</p>
             </div>
             <div class="feature-card">
                 <div class="icon">🧭</div>
@@ -96,5 +99,19 @@
     <footer>
         <p>&copy; 2026 My Online Journal</p>
     </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const link = document.getElementById('authNavLink');
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                link.textContent = 'Sign Out';
+                link.href = '#';
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await signOut();
+                });
+            }
+        });
+    </script>
 </body>
 </html>
