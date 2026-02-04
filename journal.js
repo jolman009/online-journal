@@ -50,6 +50,126 @@ async function addEntry(entry) {
 }
 
 /**
+ * Retrieve a single journal entry by ID.
+ * @param {string} id - Entry UUID.
+ * @returns {Promise<Object|null>}
+ */
+async function getEntryById(id) {
+    const { data, error } = await supabaseClient
+        .from('journal_entries')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Failed to fetch entry:', error.message);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * Update an existing journal entry.
+ * @param {string} id - Entry UUID.
+ * @param {Object} fields - { title, date, content }
+ */
+async function updateEntry(id, fields) {
+    const { error } = await supabaseClient
+        .from('journal_entries')
+        .update({
+            title: fields.title,
+            date: fields.date,
+            content: fields.content,
+        })
+        .eq('id', id);
+
+    if (error) {
+        console.error('Failed to update entry:', error.message);
+        alert('Failed to update entry. Please try again.');
+        return false;
+    }
+
+    window.location.href = 'journal.html';
+    return true;
+}
+
+/**
+ * Delete a journal entry by ID.
+ * @param {string} id - Entry UUID.
+ * @returns {Promise<boolean>}
+ */
+async function deleteEntry(id) {
+    const { error } = await supabaseClient
+        .from('journal_entries')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Failed to delete entry:', error.message);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Show inline delete confirmation on an entry card, then delete on confirm.
+ * @param {string} id - Entry UUID.
+ * @param {HTMLElement} cardElement - The card DOM node.
+ */
+function confirmDeleteEntry(id, cardElement) {
+    const actions = cardElement.querySelector('.entry-card__actions');
+    if (!actions) return;
+
+    const original = actions.innerHTML;
+
+    actions.innerHTML = '';
+
+    const msg = document.createElement('span');
+    msg.className = 'entry-card__confirm-msg';
+    msg.textContent = 'Delete this entry?';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'entry-card__btn entry-card__btn--confirm';
+    confirmBtn.type = 'button';
+    confirmBtn.textContent = 'Yes, delete';
+    confirmBtn.addEventListener('click', async () => {
+        const success = await deleteEntry(id);
+        if (success) {
+            cardElement.remove();
+            if (window._journalEntries) {
+                window._journalEntries = window._journalEntries.filter(e => e.id !== id);
+            }
+        } else {
+            actions.innerHTML = original;
+            reattachCardListeners(actions, id, cardElement);
+        }
+    });
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'entry-card__btn';
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => {
+        actions.innerHTML = original;
+        reattachCardListeners(actions, id, cardElement);
+    });
+
+    actions.appendChild(msg);
+    actions.appendChild(confirmBtn);
+    actions.appendChild(cancelBtn);
+}
+
+/**
+ * Re-attach event listeners after restoring action buttons HTML.
+ */
+function reattachCardListeners(actions, id, cardElement) {
+    const deleteBtn = actions.querySelector('.entry-card__btn--delete');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => confirmDeleteEntry(id, cardElement));
+    }
+}
+
+/**
  * Create an entry card DOM element for rendering.
  * @param {Object} entry
  * @returns {HTMLElement}
@@ -57,6 +177,7 @@ async function addEntry(entry) {
 function createEntryCard(entry) {
     const card = document.createElement('article');
     card.className = 'entry-card';
+    card.dataset.entryId = entry.id;
 
     const title = document.createElement('h3');
     title.textContent = entry.title;
@@ -79,9 +200,27 @@ function createEntryCard(entry) {
         .replace(/>/g, '&gt;');
     content.innerHTML = escaped.replace(/\n/g, '<br>');
 
+    const actions = document.createElement('div');
+    actions.className = 'entry-card__actions';
+
+    const editBtn = document.createElement('a');
+    editBtn.className = 'entry-card__btn';
+    editBtn.href = 'new-entry.html?id=' + entry.id;
+    editBtn.textContent = 'Edit';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'entry-card__btn entry-card__btn--delete';
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => confirmDeleteEntry(entry.id, card));
+
+    actions.appendChild(editBtn);
+    actions.appendChild(deleteBtn);
+
     card.appendChild(title);
     card.appendChild(timeEl);
     card.appendChild(content);
+    card.appendChild(actions);
     return card;
 }
 
@@ -131,11 +270,37 @@ async function initNewEntryPage() {
     const form = document.getElementById('entryForm');
     if (!form) return;
 
-    // Pre-fill date from URL param if present (e.g. ?date=2026-01-15)
     const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('id');
     const prefillDate = urlParams.get('date');
-    if (prefillDate) {
-        const dateInput = document.getElementById('date');
+
+    const titleInput = document.getElementById('title');
+    const dateInput = document.getElementById('date');
+    const contentInput = document.getElementById('content');
+    const templateSelect = document.getElementById('template');
+    const templateLabel = templateSelect ? templateSelect.previousElementSibling : null;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const pageHeading = document.querySelector('.page-header h2');
+    const pageEyebrow = document.querySelector('.page-header .eyebrow');
+
+    // Edit mode: fetch entry and pre-fill form
+    if (editId) {
+        const entry = await getEntryById(editId);
+        if (!entry) {
+            alert('Entry not found.');
+            window.location.href = 'journal.html';
+            return;
+        }
+
+        if (titleInput) titleInput.value = entry.title;
+        if (dateInput) dateInput.value = entry.date;
+        if (contentInput) contentInput.value = entry.content;
+        if (pageHeading) pageHeading.textContent = 'Edit Entry';
+        if (pageEyebrow) pageEyebrow.textContent = 'Update';
+        if (submitBtn) submitBtn.textContent = 'Update Entry';
+        if (templateSelect) templateSelect.style.display = 'none';
+        if (templateLabel) templateLabel.style.display = 'none';
+    } else if (prefillDate) {
         if (dateInput) dateInput.value = prefillDate;
     }
 
@@ -147,9 +312,7 @@ async function initNewEntryPage() {
         personal: `PERSONAL INDEX\n\nCURRENT READING\n- \n\nCURRENT FOCUS\n- \n\nOPEN QUESTIONS\n- \n\nIDEAS TO REVISIT\n- \n`
     };
 
-    const templateSelect = document.getElementById('template');
-    const contentInput = document.getElementById('content');
-    if (templateSelect) {
+    if (templateSelect && !editId) {
         templateSelect.addEventListener('change', function () {
             const selected = this.value;
             if (templates[selected]) {
@@ -162,9 +325,6 @@ async function initNewEntryPage() {
 
     form.addEventListener('submit', async event => {
         event.preventDefault();
-        const titleInput = document.getElementById('title');
-        const dateInput = document.getElementById('date');
-        const contentInput = document.getElementById('content');
         const title = titleInput.value.trim();
         const date = dateInput.value;
         const content = contentInput.value.trim();
@@ -172,7 +332,11 @@ async function initNewEntryPage() {
             alert('Please fill in all fields.');
             return;
         }
-        await addEntry({ title, date, content });
+        if (editId) {
+            await updateEntry(editId, { title, date, content });
+        } else {
+            await addEntry({ title, date, content });
+        }
     });
 }
 
