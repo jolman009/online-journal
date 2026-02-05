@@ -1,8 +1,8 @@
-# My Online Journal — Project Features Document
+# JotFlow — Project Features Document
 
 ## Overview
 
-My Online Journal is a cloud-synced journaling and task management application built with React, Vite, and Supabase. It features structured journal entries with markdown support and templates, a month-view calendar with visual indicators, a hybrid date-optional TODO system, and a weekly review dashboard. All data syncs across devices via Supabase with row-level security.
+JotFlow is a cloud-synced journaling and task management application built with React, Vite, and Supabase. It features structured journal entries with markdown support and templates, a month-view calendar with visual indicators, a hybrid date-optional TODO system, and a weekly review dashboard. All data syncs across devices via Supabase with row-level security.
 
 ---
 
@@ -121,7 +121,7 @@ Each todo has: text, optional date, completed status, and created_at timestamp. 
 
 All pages share a sticky header with:
 
-- Brand logo (gradient dot) + "My Online Journal" title
+- Brand logo (gradient dot) + "JotFlow" title
 - Navigation links: Home, View Journal, Calendar, Todos, Add Entry (green pill)
 - Active page link gets a blue highlight
 - "Sign Out" link appended dynamically on authenticated pages

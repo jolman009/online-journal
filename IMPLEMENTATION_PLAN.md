@@ -1,4 +1,4 @@
-# Implementation Plan — My Online Journal
+# Implementation Plan — JotFlow
 
 This document tracks the phased implementation of features from PROJECT_FEATURES.md.
 

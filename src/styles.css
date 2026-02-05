@@ -179,10 +179,20 @@ a:focus-visible {
     background: var(--header-bg);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--glass-3);
-    padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+}
+
+.site-header-inner {
+    max-width: 1100px; /* Same as .shell */
+    width: 100%; /* Ensure it takes full width within its parent */
+    margin: 0 auto; /* Center it */
+    padding: 1rem clamp(1rem, 2vw, 2rem); /* Apply padding here */
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Distribute brand and nav */
+    gap: 1rem; /* Add some gap */
 }
 
 .brand {
@@ -195,6 +205,12 @@ a:focus-visible {
     margin: 0;
     font-size: 1.1rem;
     letter-spacing: 0.01em;
+}
+
+.brand .logo {
+    height: 34px; /* Adjust as needed */
+    width: auto;
+    vertical-align: middle;
 }
 
 .logo-dot {

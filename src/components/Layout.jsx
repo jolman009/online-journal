@@ -19,92 +19,94 @@ export default function Layout() {
   return (
     <>
       <header className="site-header">
-        <div className="brand">
-          <span className="logo-dot" aria-hidden="true"></span>
-          <h1>My Online Journal</h1>
-        </div>
-        <nav>
-          <ul>
-            <li>
-              <NavLink to="/" className={({ isActive }) => isActive ? 'is-active' : ''} end>
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/journal" className={({ isActive }) => isActive ? 'is-active' : ''}>
-                View Journal
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/calendar" className={({ isActive }) => isActive ? 'is-active' : ''}>
-                Calendar
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/todos" className={({ isActive }) => isActive ? 'is-active' : ''}>
-                Todos
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/review" className={({ isActive }) => isActive ? 'is-active' : ''}>
-                Review
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/new-entry"
-                className={({ isActive }) => `pill${isActive ? ' is-active' : ''}`}
-              >
-                Add Entry
-              </NavLink>
-            </li>
-            <li>
-              <button
-                className="command-palette-trigger"
-                onClick={() => setCommandPaletteOpen(true)}
-                aria-label="Open command palette"
-                title="Command palette (Ctrl+K)"
-              >
-                <kbd>Ctrl</kbd><kbd>K</kbd>
-              </button>
-            </li>
-            {session ? (
+        <div className="site-header-inner">
+          <div className="brand">
+            <img src="/logo_lockup_light.png" alt="JotFlow Logo" className="logo" />
+            <h1></h1>
+          </div>
+          <nav>
+            <ul>
               <li>
-                <a
-                  href="#"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    await signOut();
-                  }}
-                >
-                  Sign Out
-                </a>
-              </li>
-            ) : (
-              <li>
-                <NavLink to="/login" className={({ isActive }) => isActive ? 'is-active' : ''}>
-                  Sign In
+                <NavLink to="/" className={({ isActive }) => isActive ? 'is-active' : ''} end>
+                  Home
                 </NavLink>
               </li>
-            )}
-            <li>
-              <button
-                className="theme-toggle"
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {theme === 'dark' ? '\u2600' : '\uD83C\uDF19'}
-              </button>
-            </li>
-          </ul>
-        </nav>
+              <li>
+                <NavLink to="/journal" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                  View Journal
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/calendar" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                  Calendar
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/todos" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                  Todos
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/review" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                  Review
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/new-entry"
+                  className={({ isActive }) => `pill${isActive ? ' is-active' : ''}`}
+                >
+                  Add Entry
+                </NavLink>
+              </li>
+              <li>
+                <button
+                  className="command-palette-trigger"
+                  onClick={() => setCommandPaletteOpen(true)}
+                  aria-label="Open command palette"
+                  title="Command palette (Ctrl+K)"
+                >
+                  <kbd>Ctrl</kbd><kbd>K</kbd>
+                </button>
+              </li>
+              {session ? (
+                <li>
+                  <a
+                    href="#"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await signOut();
+                    }}
+                  >
+                    Sign Out
+                  </a>
+                </li>
+              ) : (
+                <li>
+                  <NavLink to="/login" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                    Sign In
+                  </NavLink>
+                </li>
+              )}
+              <li>
+                <button
+                  className="theme-toggle"
+                  onClick={toggleTheme}
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                  title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {theme === 'dark' ? '\u2600' : '\uD83C\uDF19'}
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </header>
       <main className="shell">
         <Outlet />
       </main>
       <footer>
-        <p>&copy; 2026 My Online Journal</p>
+        <p>&copy; 2026 JotFlow</p>
         <p className="footer-shortcuts muted">
           <kbd>N</kbd> new entry &middot; <kbd>T</kbd> todos &middot; <kbd>/</kbd> search &middot; <kbd>Ctrl+K</kbd> commands
         </p>
