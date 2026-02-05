@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import { useTodos } from '../hooks/useTodos';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { buildEntryDateMap, buildTodoDateSet } from '../hooks/useCalendar';
 import EntryCard from '../components/EntryCard';
 import Calendar from '../components/Calendar';
@@ -73,6 +74,15 @@ export default function Journal() {
       return 0;
     });
   }, [entries, filterDate, debouncedQuery, selectedTags]);
+
+  const {
+    displayedItems: paginatedEntries,
+    hasMore,
+    isLoadingMore,
+    loaderRef,
+    totalCount,
+    displayedCount,
+  } = useInfiniteScroll(displayedEntries, 20);
 
   const formattedFilterDate = filterDate
     ? new Date(filterDate + 'T00:00:00Z').toLocaleDateString(undefined, {
@@ -163,6 +173,12 @@ export default function Journal() {
         </div>
       )}
 
+      {displayedEntries.length > 0 && totalCount > 20 && (
+        <div className="entries-count muted">
+          Showing {displayedCount} of {totalCount} entries
+        </div>
+      )}
+
       <div className="entries-grid" aria-live="polite">
         {displayedEntries.length === 0 ? (
           <p className={filterDate || debouncedQuery ? 'muted' : ''}>
@@ -173,11 +189,21 @@ export default function Journal() {
                 : 'No entries yet. Use the "Add Entry" page to begin your journal.'}
           </p>
         ) : (
-          displayedEntries.map(entry => (
+          paginatedEntries.map(entry => (
             <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} onTogglePin={togglePin} />
           ))
         )}
       </div>
+
+      {hasMore && (
+        <div ref={loaderRef} className="infinite-scroll-loader">
+          {isLoadingMore ? (
+            <span className="infinite-scroll-loader__spinner"></span>
+          ) : (
+            <span className="muted">Scroll for more</span>
+          )}
+        </div>
+      )}
     </>
   );
 }

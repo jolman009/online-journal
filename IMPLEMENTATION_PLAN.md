@@ -102,15 +102,15 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 
 ---
 
-## Phase 4: Performance, Reliability & Security
+## Phase 4: Performance, Reliability & Security (Core 3 ✅ COMPLETE)
 
 *Scale, stability, and data protection*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Error Boundaries | #24 | Wrap pages with error boundary; show fallback UI on crash |
-| [ ] | Code Splitting | #25 | Lazy load Calendar, Review, Todos pages |
-| [ ] | Infinite Scroll | #23 | Load entries progressively as user scrolls |
+| [x] | Error Boundaries | #24 | Wrap pages with error boundary; show fallback UI on crash |
+| [x] | Code Splitting | #25 | Lazy load Calendar, Review, Todos pages (bundle reduced from 508KB to 421KB) |
+| [x] | Infinite Scroll | #23 | Load entries progressively as user scrolls (20 at a time) |
 | [ ] | End-to-End Encryption | NEW | Encrypt journal content client-side before storing; decrypt on read |
 | [ ] | Biometric Auth | NEW | PIN code, fingerprint, or Face ID to unlock app (WebAuthn API) |
 
@@ -268,5 +268,8 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 3 | Export Data | Complete |
 | 2026-02-05 | 3 | Keyboard Shortcuts | Complete |
 | 2026-02-05 | 3 | Command Palette | Complete |
+| 2026-02-05 | 4 | Error Boundaries | Complete |
+| 2026-02-05 | 4 | Code Splitting | Complete |
+| 2026-02-05 | 4 | Infinite Scroll | Complete |
 
 *Update this table as features are completed.*
