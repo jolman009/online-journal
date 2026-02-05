@@ -267,3 +267,49 @@ Allow drag-and-drop reordering of todos within sections. Add a `sort_order` inte
 ### 15. Calendar Heatmap View
 
 Add an alternative calendar visualization that uses color intensity (lighter to darker green) based on entry count per day, similar to GitHub's contribution graph. This gives an at-a-glance view of journaling consistency over months.
+
+---
+
+## React/Vite-Enabled Features
+
+These features are practical only because of the React + Vite migration. They rely on component lifecycle, shared state, build tooling, or the single-page architecture.
+
+### 16. Offline-First PWA
+
+Use `vite-plugin-pwa` to generate a service worker with asset caching and a background sync queue for entries and todos created while offline. The app becomes installable on mobile and desktop with its own icon. Requires Vite's build pipeline to generate the service worker manifest and precache assets — not possible without a build step.
+
+### 17. Real-Time Sync Across Tabs and Devices
+
+Subscribe to Supabase Realtime channels so entries and todos created on one device appear instantly on another without refreshing. React context + `useEffect` cleanup handles subscription lifecycle cleanly. In the vanilla multi-page architecture, each page managed its own global state, making cross-page live updates impractical.
+
+### 18. Command Palette (Cmd+K)
+
+A global search overlay that can navigate to pages, jump to specific entries by title, create new items, or toggle the theme. Built as a React portal with shared state, accessible from any page via a single keyboard shortcut. The vanilla architecture would have required duplicating the overlay logic and event listeners in every HTML file.
+
+### 19. Animated Page Transitions
+
+React Router keeps components mounted during navigation, enabling smooth fade/slide transitions between pages using `framer-motion` or CSS transition groups. Multi-page vanilla JS performs full page loads with no opportunity for cross-page animation.
+
+### 20. Drag-and-Drop Todo Reordering
+
+React's state-driven rendering makes reorder operations clean: update the array in state, UI re-renders automatically. Libraries like `@dnd-kit` integrate directly with React components. Add a `sort_order` column to the `todos` table and update on drop. The vanilla approach required manual DOM node splicing and fragile sort-order tracking.
+
+### 21. Undo/Redo for Entry Editing
+
+A state history stack using `useReducer` with past/present/future arrays gives Cmd+Z and Cmd+Shift+Z support in the markdown editor. Each keystroke or significant edit pushes to the history. Vanilla JS would require manual snapshot management outside any rendering cycle.
+
+### 22. Split-Pane Live Preview
+
+Replace the current Write/Preview tab toggle with a side-by-side editor where the markdown renders in real time as the user types. React's controlled inputs bind state to both panes simultaneously, keeping them in sync on every keystroke. The tab approach exists because vanilla JS couldn't efficiently maintain two synchronized views.
+
+### 23. Infinite Scroll / Pagination
+
+Use Intersection Observer + React state to progressively load older journal entries as the user scrolls down, instead of fetching everything at once. Clean `useEffect` cleanup prevents memory leaks and stale requests. Reduces initial load time as the journal grows to hundreds of entries.
+
+### 24. Error Boundaries
+
+Wrap pages with React error boundaries (`componentDidCatch`) to show a graceful fallback UI instead of a blank screen when a component throws. Errors in one page don't break the entire app. Vanilla JS had no equivalent — a single runtime error could leave the user on a broken page with no recovery option.
+
+### 25. Code Splitting / Lazy Loading
+
+Use `React.lazy()` + `Suspense` to load heavier pages (Calendar, Review, Todos) only when navigated to, reducing the initial JavaScript bundle size. Vite automatically generates separate chunks per lazy-loaded route. No build step existed in the vanilla architecture to enable this.
