@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -18,6 +18,7 @@ import TodoItem from '../components/TodoItem';
 import SortableTodoItem from '../components/SortableTodoItem';
 import TagInput from '../components/TagInput';
 import TagFilter from '../components/TagFilter';
+import PullToRefresh from '../components/PullToRefresh';
 import { exportTodos } from '../utils/export';
 
 export default function Todos() {
@@ -41,6 +42,10 @@ export default function Todos() {
   useEffect(() => {
     fetchTodos();
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    await fetchTodos();
+  }, [fetchTodos]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -124,7 +129,7 @@ export default function Todos() {
   };
 
   return (
-    <>
+    <PullToRefresh onRefresh={handleRefresh}>
       <div className="page-header">
         <div>
           <p className="eyebrow">Tasks</p>
@@ -241,6 +246,6 @@ export default function Todos() {
           </SortableContext>
         </DndContext>
       </section>
-    </>
+    </PullToRefresh>
   );
 }

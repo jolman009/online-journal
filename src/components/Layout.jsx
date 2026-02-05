@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import CommandPalette from './CommandPalette';
+import BottomNav from './BottomNav';
 
 export default function Layout() {
   const { session, signOut } = useAuth();
@@ -112,6 +113,7 @@ export default function Layout() {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
       />
+      <BottomNav />
     </>
   );
 }

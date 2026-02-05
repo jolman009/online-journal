@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import { useTodos } from '../hooks/useTodos';
@@ -8,6 +8,8 @@ import EntryCard from '../components/EntryCard';
 import Calendar from '../components/Calendar';
 import TodosWidget from '../components/TodosWidget';
 import TagFilter from '../components/TagFilter';
+import FloatingActionButton from '../components/FloatingActionButton';
+import PullToRefresh from '../components/PullToRefresh';
 import { exportEntries } from '../utils/export';
 
 export default function Journal() {
@@ -23,6 +25,10 @@ export default function Journal() {
     fetchEntries();
     fetchTodos();
   }, []);
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([fetchEntries(), fetchTodos()]);
+  }, [fetchEntries, fetchTodos]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,7 +100,7 @@ export default function Journal() {
     : null;
 
   return (
-    <>
+    <PullToRefresh onRefresh={handleRefresh}>
       <div className="page-header">
         <div>
           <p className="eyebrow">Timeline</p>
@@ -204,6 +210,8 @@ export default function Journal() {
           )}
         </div>
       )}
-    </>
+
+      <FloatingActionButton to="/new-entry" label="Add new entry" />
+    </PullToRefresh>
   );
 }

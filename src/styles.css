@@ -2498,3 +2498,220 @@ input[type="password"]:focus {
         display: none;
     }
 }
+
+/* ===== Phase 7: Mobile Experience ===== */
+
+/* Bottom Navigation */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--glass-5);
+    padding: 0.5rem 0;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
+    z-index: 100;
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.4rem 0.5rem;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.65rem;
+    transition: color 0.15s ease;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+}
+
+.bottom-nav__item:hover,
+.bottom-nav__item--active {
+    color: var(--accent);
+}
+
+.bottom-nav__icon {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.bottom-nav__label {
+    font-weight: 500;
+}
+
+/* Floating Action Button */
+.fab {
+    display: none;
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0));
+    right: 1rem;
+    width: 56px;
+    height: 56px;
+    background: var(--accent);
+    color: var(--btn-primary-text);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px var(--btn-primary-shadow);
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    z-index: 90;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px var(--btn-primary-shadow);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+.fab__icon {
+    font-size: 1.75rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+/* Pull to Refresh */
+.pull-to-refresh {
+    position: relative;
+    touch-action: pan-y;
+}
+
+.pull-to-refresh__indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.pull-to-refresh__spinner {
+    font-size: 1.25rem;
+    color: var(--accent);
+    transition: transform 0.1s ease;
+}
+
+.pull-to-refresh__spinner--spinning {
+    animation: spin 1s linear infinite;
+}
+
+.pull-to-refresh__text {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    /* Show bottom nav */
+    .bottom-nav {
+        display: flex;
+        justify-content: space-around;
+    }
+
+    /* Show FAB */
+    .fab {
+        display: flex;
+    }
+
+    /* Add padding to main content for bottom nav */
+    .shell {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
+    }
+
+    /* Hide top nav links on mobile (keep brand and auth) */
+    .site-header nav ul li:nth-child(1),
+    .site-header nav ul li:nth-child(2),
+    .site-header nav ul li:nth-child(3),
+    .site-header nav ul li:nth-child(4),
+    .site-header nav ul li:nth-child(5),
+    .site-header nav ul li:nth-child(6) {
+        display: none;
+    }
+
+    /* Hide "Add new entry" button on mobile (use FAB instead) */
+    .page-header__actions .btn.primary {
+        display: none;
+    }
+
+    /* Hide desktop footer */
+    footer {
+        display: none;
+    }
+
+    /* Adjust page header for mobile */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .page-header__actions {
+        width: 100%;
+    }
+
+    .page-header__actions .btn.ghost {
+        flex: 1;
+    }
+
+    /* Larger touch targets */
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1.25rem;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+        min-height: 44px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+
+    /* Entry card actions */
+    .entry-card__btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Todo item touch targets */
+    .todo-item__checkbox {
+        width: 24px;
+        height: 24px;
+    }
+
+    .todo-item__delete {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 480px) {
+    .bottom-nav__label {
+        font-size: 0.6rem;
+    }
+
+    .fab {
+        width: 52px;
+        height: 52px;
+        right: 0.75rem;
+    }
+
+    .fab__icon {
+        font-size: 1.5rem;
+    }
+}

@@ -203,16 +203,16 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 
 ---
 
-## Phase 7: Mobile Experience
+## Phase 7: Mobile Experience (Core 3 ✅ COMPLETE)
 
 *Optimized for on-the-go journaling*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Mobile-First Redesign | NEW | Touch-optimized UI; larger tap targets; swipe gestures |
-| [ ] | Responsive Navigation | NEW | Bottom tab bar on mobile; hamburger menu for secondary actions |
-| [ ] | Quick Entry Widget | NEW | Floating action button for instant entry creation |
-| [ ] | Pull-to-Refresh | NEW | Native-feeling refresh gesture on entry lists |
+| [x] | Mobile-First Redesign | NEW | Touch-optimized UI; larger tap targets (44x44px min) |
+| [x] | Responsive Navigation | NEW | Bottom tab bar on mobile (<768px); top nav hidden |
+| [x] | Quick Entry Widget | NEW | Floating action button on Journal page |
+| [x] | Pull-to-Refresh | NEW | Native-feeling refresh gesture on Journal and Todos |
 | [ ] | Haptic Feedback | NEW | Subtle vibrations on interactions (Vibration API) |
 | [ ] | App Install Prompt | NEW | Smart banner prompting PWA installation on mobile |
 
@@ -276,5 +276,8 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 5 | Rich Text Toolbar | Complete |
 | 2026-02-05 | 6 | Real-Time Sync | Complete |
 | 2026-02-05 | 6 | Drag-and-Drop Todos | Complete |
+| 2026-02-05 | 7 | Bottom Navigation | Complete |
+| 2026-02-05 | 7 | Floating Action Button | Complete |
+| 2026-02-05 | 7 | Pull-to-Refresh | Complete |
 
 *Update this table as features are completed.*
