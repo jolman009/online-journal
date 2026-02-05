@@ -1,8 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Layout() {
   const { session, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
@@ -65,6 +67,16 @@ export default function Layout() {
                 </NavLink>
               </li>
             )}
+            <li>
+              <button
+                className="theme-toggle"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? '\u2600' : '\uD83C\uDF19'}
+              </button>
+            </li>
           </ul>
         </nav>
       </header>
