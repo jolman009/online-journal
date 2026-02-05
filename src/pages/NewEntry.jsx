@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries.jsx';
 import MarkdownEditor from '../components/MarkdownEditor';
 import TagInput from '../components/TagInput';
+import MoodSelector from '../components/MoodSelector';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import { encryptData, decryptData } from '../lib/crypto'; // Import crypto utilities
 import { useHapticFeedback } from '../hooks/useHapticFeedback'; // Import useHapticFeedback
@@ -39,6 +40,7 @@ export default function NewEntry() {
   const [content, setContent] = useState('');
   const [template, setTemplate] = useState('');
   const [tags, setTags] = useState([]);
+  const [mood, setMood] = useState(null);
   const [loadingEntry, setLoadingEntry] = useState(!!editId);
   const [hasDraft, setHasDraft] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(true); // New state for draft loading
@@ -112,6 +114,7 @@ export default function NewEntry() {
         setDate(entry.date);
         setContent(entry.content);
         setTags(entry.tags || []);
+        setMood(entry.mood || null);
         setTemplate(''); // No template for existing entry
         setLoadingEntry(false);
       } else {
@@ -123,6 +126,7 @@ export default function NewEntry() {
           setContent(draft.content || '');
           setTemplate(draft.template || '');
           setTags(draft.tags || []);
+          setMood(draft.mood || null);
         } else {
           // No draft, set defaults
           setTitle('');
@@ -130,6 +134,7 @@ export default function NewEntry() {
           setContent('');
           setTemplate('');
           setTags([]);
+          setMood(null);
         }
         setLoadingEntry(false);
       }
@@ -154,7 +159,7 @@ export default function NewEntry() {
       clearTimeout(saveTimerRef.current);
     }
 
-    const hasContent = title.trim() || content.trim() || date || tags.length > 0;
+    const hasContent = title.trim() || content.trim() || date || tags.length > 0 || mood !== null;
 
     if (!hasContent) {
       clearDraft();
@@ -163,7 +168,7 @@ export default function NewEntry() {
     }
 
     saveTimerRef.current = setTimeout(async () => { // Made async here
-      await saveEncryptedDraft({ title, date, content, template, tags });
+      await saveEncryptedDraft({ title, date, content, template, tags, mood });
       // setHasDraft(true); // Handled inside saveEncryptedDraft
     }, DRAFT_DEBOUNCE_MS);
 
@@ -172,7 +177,7 @@ export default function NewEntry() {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [title, date, content, template, tags, editId, saveEncryptedDraft, clearDraft]);
+  }, [title, date, content, template, tags, mood, editId, saveEncryptedDraft, clearDraft]);
 
 
   const handleTemplateChange = (e) => {
@@ -203,6 +208,7 @@ export default function NewEntry() {
         date,
         content: content.trim(),
         tags,
+        mood,
       });
       if (success) {
         triggerHaptic(); // Trigger haptic feedback on success
@@ -215,6 +221,7 @@ export default function NewEntry() {
         date,
         content: content.trim(),
         tags,
+        mood,
       });
       if (success) {
         triggerHaptic(); // Trigger haptic feedback on success
@@ -231,6 +238,7 @@ export default function NewEntry() {
     setContent('');
     setTemplate('');
     setTags([]);
+    setMood(null);
     setHasDraft(false);
   };
 
@@ -333,6 +341,9 @@ export default function NewEntry() {
 
           <label htmlFor="content">Content</label>
           <MarkdownEditor value={content} onChange={setContent} />
+
+          <label>How are you feeling?</label>
+          <MoodSelector value={mood} onChange={setMood} />
 
           <label>Tags</label>
           <TagInput tags={tags} onChange={setTags} placeholder="Add tags (press Enter or comma)" />

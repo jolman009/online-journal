@@ -2731,3 +2731,103 @@ input[type="password"]:focus {
         font-size: 1.5rem;
     }
 }
+
+/* ===== Phase 2: Mood Tracking ===== */
+
+/* Mood Selector */
+.mood-selector {
+    width: 100%;
+}
+
+.mood-selector__options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mood-selector__option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+    background: var(--glass-3);
+    border: 2px solid var(--glass-5);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 64px;
+    min-height: 44px;
+}
+
+.mood-selector__option:hover:not(:disabled) {
+    background: var(--glass-5);
+    border-color: var(--glass-6);
+    transform: translateY(-2px);
+}
+
+.mood-selector__option--selected {
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+}
+
+.mood-selector__option--selected:hover:not(:disabled) {
+    background: var(--accent-bg);
+    border-color: var(--accent);
+}
+
+.mood-selector__option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mood-selector__emoji {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.mood-selector__label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.mood-selector__option--selected .mood-selector__label {
+    color: var(--accent);
+}
+
+/* Entry Card Mood Display */
+.entry-card__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.3rem 0 0.6rem;
+}
+
+.entry-card__meta time {
+    margin: 0;
+}
+
+.entry-card__mood {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+@media (max-width: 480px) {
+    .mood-selector__options {
+        gap: 0.35rem;
+    }
+
+    .mood-selector__option {
+        padding: 0.5rem 0.75rem;
+        min-width: 56px;
+    }
+
+    .mood-selector__emoji {
+        font-size: 1.25rem;
+    }
+
+    .mood-selector__label {
+        font-size: 0.65rem;
+    }
+}

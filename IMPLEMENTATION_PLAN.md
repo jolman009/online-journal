@@ -56,7 +56,7 @@ These features from the roadmap have been completed:
 | [x] | Streak Tracker | #3 | Display current streak, longest streak, total entries on Home page |
 | [x] | Calendar Heatmap | #15 | Color intensity on calendar cells based on entry count per day |
 | [x] | Entry Pinning | #7 | Star/pin icon on entries; pinned entries sort to top |
-| [ ] | Mood Tracking | NEW | Rate mood per entry; visualize emotional trends over time with charts |
+| [x] | Mood Tracking | NEW | Rate mood per entry; visualize emotional trends over time with charts |
 | [ ] | Location & Date Stamps | NEW | Auto-capture geolocation and timestamp; display on entry cards |
 
 **Database Changes:**
@@ -133,7 +133,7 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 |--------|---------|-----|-------------|
 | [x] | Split-Pane Preview | #22 | Side-by-side editor with live markdown preview + synced scroll |
 | [x] | Undo/Redo | #21 | Ctrl+Z / Ctrl+Shift+Z support with 50-state history stack |
-| [ ] | Animated Transitions | #19 | Smooth page transitions using framer-motion |
+| [x] | Animated Transitions | #19 | Smooth page transitions using framer-motion |
 | [ ] | Photo Attachments | NEW | Upload and embed photos in entries; image gallery view |
 | [ ] | Video Attachments | NEW | Embed video clips in entries; playback within app |
 | [ ] | Voice Notes | NEW | Record audio directly in app; transcription optional |
@@ -279,5 +279,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 7 | Bottom Navigation | Complete |
 | 2026-02-05 | 7 | Floating Action Button | Complete |
 | 2026-02-05 | 7 | Pull-to-Refresh | Complete |
+| 2026-02-05 | 2 | Mood Tracking | Complete |
+| 2026-02-05 | 5 | Animated Transitions | Complete |
 
 *Update this table as features are completed.*

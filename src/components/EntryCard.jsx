@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom';
 import { renderMarkdown } from '../utils/markdown';
 import { useHapticFeedback } from '../hooks/useHapticFeedback'; // Import useHapticFeedback
 
+const MOOD_EMOJIS = {
+  1: '😢',
+  2: '😔',
+  3: '😐',
+  4: '🙂',
+  5: '😄',
+};
+
 export default function EntryCard({ entry, onDelete, onTogglePin }) {
   const [confirming, setConfirming] = useState(false);
   const triggerHaptic = useHapticFeedback(); // Initialize haptic feedback hook
@@ -37,7 +45,14 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
         {entry.pinned && <span className="entry-card__pin-icon" aria-label="Pinned">&#128204;</span>}
         <h3>{entry.isDecrypted === false ? 'Encrypted Entry' : entry.title}</h3>
       </div>
-      <time>{formattedDate}</time>
+      <div className="entry-card__meta">
+        <time>{formattedDate}</time>
+        {entry.mood && entry.isDecrypted !== false && (
+          <span className="entry-card__mood" title={`Mood: ${entry.mood}/5`}>
+            {MOOD_EMOJIS[entry.mood]}
+          </span>
+        )}
+      </div>
       {entry.tags && entry.tags.length > 0 && entry.isDecrypted !== false && (
         <div className="entry-card__tags">
           {entry.tags.map(tag => (

@@ -151,7 +151,7 @@ export function useEntries() {
           title: entry.title,
           content: entry.content,
           tags: entry.tags || [],
-          // Add mood, location_lat, location_lng, location_name here when they are integrated
+          mood: entry.mood || null,
         };
     
         const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
@@ -185,7 +185,7 @@ export function useEntries() {
         if (fields.title !== undefined) sensitiveData.title = fields.title;
         if (fields.content !== undefined) sensitiveData.content = fields.content;
         if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
-        // Add mood, location_lat, location_lng, location_name here when they are integrated
+        if (fields.mood !== undefined) sensitiveData.mood = fields.mood;
     
         const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
     
