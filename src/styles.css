@@ -3081,3 +3081,329 @@ input[type="password"]:focus {
         text-align: center;
     }
 }
+
+/* ===== Quick Capture Modal ===== */
+
+.quick-capture-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1rem;
+    padding-top: 10vh;
+}
+
+.quick-capture-modal {
+    width: 100%;
+    max-width: 600px;
+    background: var(--panel);
+    border: 1px solid var(--glass-5);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow), 0 0 60px rgba(0, 0, 0, 0.3);
+    animation: quickCaptureIn 0.2s ease-out;
+}
+
+@keyframes quickCaptureIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.quick-capture-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--glass-4);
+}
+
+.quick-capture-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.quick-capture-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.quick-capture-close:hover {
+    background: var(--glass-4);
+    color: var(--text);
+}
+
+.quick-capture-textarea {
+    width: 100%;
+    min-height: 200px;
+    max-height: 400px;
+    padding: 1.25rem;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    font-family: var(--font);
+    line-height: 1.7;
+    color: var(--text);
+    resize: vertical;
+}
+
+.quick-capture-textarea:focus {
+    outline: none;
+}
+
+.quick-capture-textarea::placeholder {
+    color: var(--muted);
+}
+
+.quick-capture-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--glass-4);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.quick-capture-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.quick-capture-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--glass-3);
+    border: 1px solid var(--glass-5);
+    border-radius: 20px;
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.quick-capture-option-btn:hover {
+    background: var(--glass-5);
+}
+
+.quick-capture-option-btn--active {
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+    color: var(--accent);
+}
+
+.quick-capture-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.quick-capture-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.quick-capture-hint kbd {
+    padding: 0.1rem 0.35rem;
+    background: var(--glass-3);
+    border: 1px solid var(--glass-5);
+    border-radius: 3px;
+    font-size: 0.7rem;
+}
+
+.quick-capture-mood {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--glass-4);
+    animation: moodSlideIn 0.15s ease-out;
+}
+
+@keyframes moodSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.quick-capture-mood-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass-3);
+    border: 2px solid var(--glass-5);
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.quick-capture-mood-btn:hover {
+    background: var(--glass-5);
+    transform: scale(1.1);
+}
+
+.quick-capture-mood-btn--selected {
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+}
+
+@media (max-width: 480px) {
+    .quick-capture-overlay {
+        padding: 0.5rem;
+        padding-top: 5vh;
+    }
+
+    .quick-capture-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .quick-capture-actions {
+        justify-content: space-between;
+    }
+
+    .quick-capture-hint {
+        display: none;
+    }
+}
+
+/* ===== Focus Mode / Zen Writing ===== */
+
+.focus-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.85rem;
+    background: var(--glass-3);
+    border: 1px solid var(--glass-5);
+    border-radius: 20px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.focus-mode-toggle:hover {
+    background: var(--glass-5);
+}
+
+.focus-mode-toggle--active {
+    background: var(--accent-bg);
+    border-color: var(--accent-border);
+    color: var(--accent);
+}
+
+.focus-mode-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+.focus-mode-indicator__dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+/* Focus mode active state */
+body.focus-mode .site-header nav ul li:not(:last-child) {
+    display: none;
+}
+
+body.focus-mode .page-header .eyebrow,
+body.focus-mode .page-header .muted {
+    display: none;
+}
+
+body.focus-mode .form-card {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.focus-mode .focus-hidden {
+    display: none !important;
+}
+
+/* Collapsible toolbar */
+.editor-toolbar--collapsible {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease, padding 0.2s ease;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.markdown-editor:hover .editor-toolbar--collapsible,
+.markdown-editor:focus-within .editor-toolbar--collapsible,
+.editor-toolbar--collapsible.editor-toolbar--expanded {
+    max-height: 60px;
+    opacity: 1;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+}
+
+.toolbar-toggle-btn {
+    width: 100%;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.toolbar-toggle-btn:hover {
+    color: var(--text);
+}
+
+.toolbar-toggle-hint {
+    border-top: 1px solid var(--glass-4);
+    padding: 0.35rem;
+    text-align: center;
+}

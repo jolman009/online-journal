@@ -214,6 +214,8 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 | [x] | Quick Entry Widget | NEW | Floating action button on Journal page |
 | [x] | Pull-to-Refresh | NEW | Native-feeling refresh gesture on Journal and Todos |
 | [x] | Haptic Feedback | NEW | Subtle vibrations on interactions (Vibration API) |
+| [x] | Quick Capture Modal | NEW | One-click entry creation via modal (Q key shortcut) |
+| [x] | Focus/Zen Mode | NEW | Distraction-free writing with collapsible toolbar (F key) |
 | [ ] | App Install Prompt | NEW | Smart banner prompting PWA installation on mobile |
 
 **Database Changes:** None
@@ -282,5 +284,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 2 | Mood Tracking | Complete |
 | 2026-02-05 | 5 | Animated Transitions | Complete |
 | 2026-02-05 | 5 | Voice Notes | Complete |
+| 2026-02-05 | 7 | Quick Capture Modal | Complete |
+| 2026-02-05 | 7 | Focus/Zen Mode | Complete |
 
 *Update this table as features are completed.*

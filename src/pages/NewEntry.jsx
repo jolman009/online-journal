@@ -11,6 +11,7 @@ import { useHapticFeedback } from '../hooks/useHapticFeedback'; // Import useHap
 
 const DRAFT_DEBOUNCE_MS = 2500;
 const DRAFT_KEY = 'entry-draft-new';
+const FOCUS_MODE_KEY = 'jotflow-focus-mode';
 
 // These functions are now async and depend on encryptionKey
 // They will be passed down via useCallback or similar to avoid re-creation issues
@@ -47,7 +48,70 @@ export default function NewEntry() {
   const [hasDraft, setHasDraft] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(true); // New state for draft loading
 
+  // Focus mode state - persisted to localStorage
+  const [focusMode, setFocusMode] = useState(() => {
+    try {
+      return localStorage.getItem(FOCUS_MODE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const saveTimerRef = useRef(null);
+
+  // Focus mode: toggle body class and persist to localStorage
+  const toggleFocusMode = useCallback(() => {
+    setFocusMode(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem(FOCUS_MODE_KEY, String(next));
+      } catch (e) {
+        console.warn('Failed to persist focus mode:', e);
+      }
+      return next;
+    });
+  }, []);
+
+  // Apply/remove body class when focus mode changes
+  useEffect(() => {
+    if (focusMode) {
+      document.body.classList.add('focus-mode');
+    } else {
+      document.body.classList.remove('focus-mode');
+    }
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove('focus-mode');
+    };
+  }, [focusMode]);
+
+  // Keyboard shortcuts: F to toggle focus mode, Escape to exit
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger if user is typing in an input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        // Allow Escape in textarea to exit focus mode
+        if (e.key === 'Escape' && focusMode) {
+          e.preventDefault();
+          setFocusMode(false);
+          localStorage.setItem(FOCUS_MODE_KEY, 'false');
+        }
+        return;
+      }
+
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFocusMode();
+      } else if (e.key === 'Escape' && focusMode) {
+        e.preventDefault();
+        setFocusMode(false);
+        localStorage.setItem(FOCUS_MODE_KEY, 'false');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [focusMode, toggleFocusMode]);
 
   // Secure draft functions
   const saveEncryptedDraft = useCallback(async (draftToSave) => {
@@ -288,7 +352,19 @@ export default function NewEntry() {
             {editId ? 'Update your entry below.' : 'Pick a template or start from scratch.'}
           </p>
         </div>
-        <Link className="btn ghost" to="/journal">Back to journal</Link>
+        <div className="page-header__actions">
+          <button
+            type="button"
+            className={`focus-mode-toggle${focusMode ? ' focus-mode-toggle--active' : ''}`}
+            onClick={toggleFocusMode}
+            title={focusMode ? 'Exit focus mode (Esc)' : 'Enter focus mode (F)'}
+            aria-pressed={focusMode}
+          >
+            {focusMode ? 'Exit Focus' : 'Focus'}
+            {focusMode && <span className="focus-mode-indicator"><span className="focus-mode-indicator__dot"></span></span>}
+          </button>
+          <Link className="btn ghost" to="/journal">Back to journal</Link>
+        </div>
       </div>
 
       {hasDraft && !editId && (
@@ -307,7 +383,7 @@ export default function NewEntry() {
       <section className="form-card">
         <form onSubmit={handleSubmit}>
           {!editId && (
-            <>
+            <div className={focusMode ? 'focus-hidden' : ''}>
               <label htmlFor="template">Choose a template</label>
               <select
                 id="template"
@@ -322,7 +398,7 @@ export default function NewEntry() {
                 <option value="book">Book Notes</option>
                 <option value="personal">Personal Index</option>
               </select>
-            </>
+            </div>
           )}
 
           <label htmlFor="title">Title</label>
@@ -348,20 +424,26 @@ export default function NewEntry() {
           />
 
           <label htmlFor="content">Content</label>
-          <MarkdownEditor value={content} onChange={setContent} />
+          <MarkdownEditor value={content} onChange={setContent} focusMode={focusMode} />
 
-          <label>Voice Notes</label>
-          <VoiceRecorder
-            notes={voiceNotes}
-            onChange={setVoiceNotes}
-            onTranscript={(text) => setContent(prev => prev + '\n\n> ' + text)}
-          />
+          <div className={focusMode ? 'focus-hidden' : ''}>
+            <label>Voice Notes</label>
+            <VoiceRecorder
+              notes={voiceNotes}
+              onChange={setVoiceNotes}
+              onTranscript={(text) => setContent(prev => prev + '\n\n> ' + text)}
+            />
+          </div>
 
-          <label>How are you feeling?</label>
-          <MoodSelector value={mood} onChange={setMood} />
+          <div className={focusMode ? 'focus-hidden' : ''}>
+            <label>How are you feeling?</label>
+            <MoodSelector value={mood} onChange={setMood} />
+          </div>
 
-          <label>Tags</label>
-          <TagInput tags={tags} onChange={setTags} placeholder="Add tags (press Enter or comma)" />
+          <div className={focusMode ? 'focus-hidden' : ''}>
+            <label>Tags</label>
+            <TagInput tags={tags} onChange={setTags} placeholder="Add tags (press Enter or comma)" />
+          </div>
 
           <button className="btn primary" type="submit">
             {editId ? 'Update Entry' : 'Save Entry'}

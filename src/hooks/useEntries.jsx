@@ -231,7 +231,7 @@ export function useEntries() {
           .from('journal_entries')
           .update({ pinned: !currentPinned })
           .eq('id', id);
-    
+
         if (error) {
           console.error('Failed to toggle pin:', error.message);
           return false;
@@ -239,7 +239,42 @@ export function useEntries() {
         // Real-time will handle the state update
         return true;
       };
-    
+
+      // Quick capture: auto-generate title from first line, auto-set date to today
+      const quickAddEntry = async (content, mood = null) => {
+        if (!user) return false;
+        if (!encryptionKey) {
+          alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
+          return false;
+        }
+
+        // Auto-generate title from first line or use date
+        const firstLine = content.split('\n')[0].trim();
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        const formattedDate = today.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+
+        // Use first line as title (truncate if too long), or fallback to date
+        let title = firstLine.slice(0, 50);
+        if (!title || title.length < 3) {
+          title = `Quick note - ${formattedDate}`;
+        } else if (firstLine.length > 50) {
+          title = title + '...';
+        }
+
+        return addEntry({
+          title,
+          date: dateStr,
+          content,
+          tags: [],
+          mood,
+          voiceNotes: [],
+        });
+      };
+
       return {
         entries,
         loading,
@@ -249,5 +284,6 @@ export function useEntries() {
         updateEntry,
         deleteEntry,
         togglePin,
+        quickAddEntry,
       };
     }

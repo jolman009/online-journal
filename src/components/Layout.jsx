@@ -108,7 +108,7 @@ export default function Layout() {
       <footer>
         <p>&copy; 2026 JotFlow</p>
         <p className="footer-shortcuts muted">
-          <kbd>N</kbd> new entry &middot; <kbd>T</kbd> todos &middot; <kbd>/</kbd> search &middot; <kbd>Ctrl+K</kbd> commands
+          <kbd>N</kbd> new &middot; <kbd>Q</kbd> quick &middot; <kbd>T</kbd> todos &middot; <kbd>/</kbd> search &middot; <kbd>F</kbd> focus &middot; <kbd>Ctrl+K</kbd> commands
         </p>
       </footer>
       <CommandPalette

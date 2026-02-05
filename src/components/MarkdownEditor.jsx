@@ -4,8 +4,9 @@ import EditorToolbar from './EditorToolbar';
 
 const MAX_HISTORY = 50;
 
-export default function MarkdownEditor({ value, onChange }) {
+export default function MarkdownEditor({ value, onChange, focusMode = false }) {
   const [viewMode, setViewMode] = useState('write'); // 'write' | 'preview' | 'split'
+  const [toolbarExpanded, setToolbarExpanded] = useState(!focusMode);
   const textareaRef = useRef(null);
 
   // Undo/Redo history
@@ -165,15 +166,30 @@ export default function MarkdownEditor({ value, onChange }) {
       </div>
 
       {viewMode !== 'preview' && (
-        <EditorToolbar
-          textareaRef={textareaRef}
-          value={value}
-          onChange={handleChange}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-        />
+        <>
+          {focusMode && !toolbarExpanded && (
+            <div className="toolbar-toggle-hint">
+              <button
+                type="button"
+                className="toolbar-toggle-btn"
+                onClick={() => setToolbarExpanded(true)}
+              >
+                Show formatting toolbar
+              </button>
+            </div>
+          )}
+          <div className={`editor-toolbar--collapsible${toolbarExpanded ? ' editor-toolbar--expanded' : ''}`}>
+            <EditorToolbar
+              textareaRef={textareaRef}
+              value={value}
+              onChange={handleChange}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+            />
+          </div>
+        </>
       )}
 
       <div className="editor-content">

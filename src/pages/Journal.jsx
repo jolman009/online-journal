@@ -10,15 +10,17 @@ import TodosWidget from '../components/TodosWidget';
 import TagFilter from '../components/TagFilter';
 import FloatingActionButton from '../components/FloatingActionButton';
 import PullToRefresh from '../components/PullToRefresh';
+import QuickCaptureModal from '../components/QuickCaptureModal';
 import { exportEntries } from '../utils/export';
 
 export default function Journal() {
-  const { entries, fetchEntries, deleteEntry, togglePin } = useEntries();
+  const { entries, fetchEntries, deleteEntry, togglePin, quickAddEntry } = useEntries();
   const { todos, fetchTodos } = useTodos();
   const [filterDate, setFilterDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
+  const [showQuickCapture, setShowQuickCapture] = useState(false);
   const searchInputRef = useRef(null);
 
   useEffect(() => {
@@ -36,6 +38,27 @@ export default function Journal() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Keyboard shortcut: Q for quick capture
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger if user is typing in an input/textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+        return;
+      }
+      if (e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        setShowQuickCapture(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleQuickSave = useCallback(async ({ content, mood }) => {
+    await quickAddEntry(content, mood);
+  }, [quickAddEntry]);
 
   const entryDateMap = buildEntryDateMap(entries);
   const todoDateSet = buildTodoDateSet(todos);
@@ -211,7 +234,16 @@ export default function Journal() {
         </div>
       )}
 
-      <FloatingActionButton to="/new-entry" label="Add new entry" />
+      <FloatingActionButton
+        onClick={() => setShowQuickCapture(true)}
+        label="Quick capture"
+      />
+
+      <QuickCaptureModal
+        isOpen={showQuickCapture}
+        onClose={() => setShowQuickCapture(false)}
+        onSave={handleQuickSave}
+      />
     </PullToRefresh>
   );
 }
