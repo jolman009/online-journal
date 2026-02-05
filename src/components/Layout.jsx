@@ -21,7 +21,11 @@ export default function Layout() {
       <header className="site-header">
         <div className="site-header-inner">
           <div className="brand">
-            <img src="/logo_lockup_light.png" alt="JotFlow Logo" className="logo" />
+            <img
+              src={theme === 'dark' ? '/logo_lockup_dark_bg.png' : '/logo_lockup_light.png'}
+              alt="JotFlow Logo"
+              className="logo"
+            />
             <h1></h1>
           </div>
           <nav>
