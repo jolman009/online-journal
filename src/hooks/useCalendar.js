@@ -6,6 +6,16 @@ export function buildEntryDateSet(entries) {
   return set;
 }
 
+export function buildEntryDateMap(entries) {
+  const map = new Map();
+  entries.forEach(e => {
+    if (e.date) {
+      map.set(e.date, (map.get(e.date) || 0) + 1);
+    }
+  });
+  return map;
+}
+
 export function buildTodoDateSet(todos) {
   const set = new Set();
   todos.forEach(t => {

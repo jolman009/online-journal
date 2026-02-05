@@ -6,7 +6,7 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-export default function Calendar({ entryDateSet, todoDateSet, onDateClick }) {
+export default function Calendar({ entryDateMap, todoDateSet, onDateClick }) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -45,18 +45,23 @@ export default function Calendar({ entryDateSet, todoDateSet, onDateClick }) {
 
   const todoSet = todoDateSet || new Set();
 
+  const entryMap = entryDateMap || new Map();
+
   const dayCells = Array.from({ length: daysInMonth }, (_, i) => {
     const day = i + 1;
     const dateStr = formatDateStr(year, month, day);
     const isToday = dateStr === todayStr;
     const isSelected = dateStr === selectedDate;
-    const hasEntry = entryDateSet.has(dateStr);
+    const entryCount = entryMap.get(dateStr) || 0;
     const hasTodo = todoSet.has(dateStr);
+
+    const intensityLevel = Math.min(entryCount, 3);
 
     let cellClass = 'cal-cell';
     if (isToday) cellClass += ' cal-cell--today';
     if (isSelected) cellClass += ' cal-cell--selected';
-    if (hasEntry || hasTodo) cellClass += ' cal-cell--has-entry';
+    if (entryCount > 0 || hasTodo) cellClass += ' cal-cell--has-entry';
+    if (entryCount > 0) cellClass += ` cal-cell--intensity-${intensityLevel}`;
 
     return (
       <button
@@ -66,9 +71,9 @@ export default function Calendar({ entryDateSet, todoDateSet, onDateClick }) {
         onClick={() => handleDateClick(dateStr)}
       >
         <span className="cal-day-num">{day}</span>
-        {(hasEntry || hasTodo) && (
+        {(entryCount > 0 || hasTodo) && (
           <span className="cal-dots">
-            {hasEntry && <span className="cal-dot cal-dot--entry" />}
+            {entryCount > 0 && <span className="cal-dot cal-dot--entry" />}
             {hasTodo && <span className="cal-dot cal-dot--todo" />}
           </span>
         )}

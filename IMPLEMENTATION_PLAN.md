@@ -47,15 +47,15 @@ These features from the roadmap have been completed:
 
 ---
 
-## Phase 2: Gamification & Engagement
+## Phase 2: Gamification & Engagement (Core 3 ✅ COMPLETE)
 
 *Encourage consistent journaling habits*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Streak Tracker | #3 | Display current streak, longest streak, total entries on Home page |
-| [ ] | Calendar Heatmap | #15 | Color intensity on calendar cells based on entry count per day |
-| [ ] | Entry Pinning | #7 | Star/pin icon on entries; pinned entries sort to top |
+| [x] | Streak Tracker | #3 | Display current streak, longest streak, total entries on Home page |
+| [x] | Calendar Heatmap | #15 | Color intensity on calendar cells based on entry count per day |
+| [x] | Entry Pinning | #7 | Star/pin icon on entries; pinned entries sort to top |
 | [ ] | Mood Tracking | NEW | Rate mood per entry; visualize emotional trends over time with charts |
 | [ ] | Location & Date Stamps | NEW | Auto-capture geolocation and timestamp; display on entry cards |
 
@@ -261,5 +261,8 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 1 | Overdue Todos | Complete |
 | 2026-02-05 | 1 | Entry Search | Complete |
 | 2026-02-05 | 1 | Auto-Save Drafts | Complete |
+| 2026-02-05 | 2 | Entry Pinning | Complete |
+| 2026-02-05 | 2 | Calendar Heatmap | Complete |
+| 2026-02-05 | 2 | Streak Tracker | Complete |
 
 *Update this table as features are completed.*

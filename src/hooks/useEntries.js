@@ -47,6 +47,7 @@ export function useEntries() {
         title: entry.title,
         date: entry.date,
         content: entry.content,
+        pinned: false,
       });
 
     if (error) {
@@ -89,6 +90,22 @@ export function useEntries() {
     return true;
   };
 
+  const togglePin = async (id, currentPinned) => {
+    const { error } = await supabase
+      .from('journal_entries')
+      .update({ pinned: !currentPinned })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to toggle pin:', error.message);
+      return false;
+    }
+    setEntries(prev =>
+      prev.map(e => (e.id === id ? { ...e, pinned: !currentPinned } : e))
+    );
+    return true;
+  };
+
   return {
     entries,
     loading,
@@ -97,5 +114,6 @@ export function useEntries() {
     addEntry,
     updateEntry,
     deleteEntry,
+    togglePin,
   };
 }

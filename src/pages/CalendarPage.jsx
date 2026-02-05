@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import { useTodos } from '../hooks/useTodos';
-import { buildEntryDateSet, buildTodoDateSet } from '../hooks/useCalendar';
+import { buildEntryDateMap, buildTodoDateSet } from '../hooks/useCalendar';
 import Calendar from '../components/Calendar';
 import EntryCard from '../components/EntryCard';
 import TodoItem from '../components/TodoItem';
 
 export default function CalendarPage() {
-  const { entries, fetchEntries, deleteEntry } = useEntries();
+  const { entries, fetchEntries, deleteEntry, togglePin } = useEntries();
   const { todos, fetchTodos, toggleTodo, deleteTodo } = useTodos();
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -17,7 +17,7 @@ export default function CalendarPage() {
     fetchTodos();
   }, []);
 
-  const entryDateSet = buildEntryDateSet(entries);
+  const entryDateMap = buildEntryDateMap(entries);
   const todoDateSet = buildTodoDateSet(todos);
 
   const matchingEntries = selectedDate
@@ -49,7 +49,7 @@ export default function CalendarPage() {
 
       <div className="calendar-widget calendar-widget--full">
         <Calendar
-          entryDateSet={entryDateSet}
+          entryDateMap={entryDateMap}
           todoDateSet={todoDateSet}
           onDateClick={(dateStr) => setSelectedDate(dateStr)}
         />
@@ -69,7 +69,7 @@ export default function CalendarPage() {
           ) : (
             <div className="entries-grid">
               {matchingEntries.map(entry => (
-                <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} />
+                <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} onTogglePin={togglePin} />
               ))}
             </div>
           )}

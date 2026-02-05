@@ -1,8 +1,41 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useEntries } from '../hooks/useEntries';
+import { useStreak } from '../hooks/useStreak';
 
 export default function Home() {
+  const { user } = useAuth();
+  const { entries, fetchEntries } = useEntries();
+  const { currentStreak, longestStreak, totalEntries } = useStreak(entries);
+
+  useEffect(() => {
+    if (user) {
+      fetchEntries();
+    }
+  }, [user]);
+
   return (
     <>
+      {user && (
+        <section className="home-stats">
+          <div className="review-stats">
+            <div className="review-stat">
+              <span className="review-stat__value">{currentStreak}</span>
+              <span className="review-stat__label">Current Streak</span>
+            </div>
+            <div className="review-stat">
+              <span className="review-stat__value">{longestStreak}</span>
+              <span className="review-stat__label">Longest Streak</span>
+            </div>
+            <div className="review-stat">
+              <span className="review-stat__value">{totalEntries}</span>
+              <span className="review-stat__label">Total Entries</span>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="hero">
         <div className="hero__text">
           <p className="eyebrow">Synced across devices</p>

@@ -2,13 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import { useTodos } from '../hooks/useTodos';
-import { buildEntryDateSet, buildTodoDateSet } from '../hooks/useCalendar';
+import { buildEntryDateMap, buildTodoDateSet } from '../hooks/useCalendar';
 import EntryCard from '../components/EntryCard';
 import Calendar from '../components/Calendar';
 import TodosWidget from '../components/TodosWidget';
 
 export default function Journal() {
-  const { entries, fetchEntries, deleteEntry } = useEntries();
+  const { entries, fetchEntries, deleteEntry, togglePin } = useEntries();
   const { todos, fetchTodos } = useTodos();
   const [filterDate, setFilterDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +26,7 @@ export default function Journal() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const entryDateSet = buildEntryDateSet(entries);
+  const entryDateMap = buildEntryDateMap(entries);
   const todoDateSet = buildTodoDateSet(todos);
 
   const displayedEntries = useMemo(() => {
@@ -44,7 +44,12 @@ export default function Journal() {
       );
     }
 
-    return filtered;
+    // Sort pinned entries first
+    return [...filtered].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return 0;
+    });
   }, [entries, filterDate, debouncedQuery]);
 
   const formattedFilterDate = filterDate
@@ -90,7 +95,7 @@ export default function Journal() {
 
       <div className="calendar-widget">
         <Calendar
-          entryDateSet={entryDateSet}
+          entryDateMap={entryDateMap}
           todoDateSet={todoDateSet}
           onDateClick={(dateStr) => setFilterDate(dateStr)}
         />
@@ -129,7 +134,7 @@ export default function Journal() {
           </p>
         ) : (
           displayedEntries.map(entry => (
-            <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} />
+            <EntryCard key={entry.id} entry={entry} onDelete={deleteEntry} onTogglePin={togglePin} />
           ))
         )}
       </div>
