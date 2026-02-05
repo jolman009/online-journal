@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { useEntries } from '../hooks/useEntries';
+import { useEntries } from '../hooks/useEntries.jsx';
 import MarkdownEditor from '../components/MarkdownEditor';
 import TagInput from '../components/TagInput';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import { encryptData, decryptData } from '../lib/crypto'; // Import crypto utilities
+import { useHapticFeedback } from '../hooks/useHapticFeedback'; // Import useHapticFeedback
 
 const DRAFT_DEBOUNCE_MS = 2500;
 const DRAFT_KEY = 'entry-draft-new';
@@ -26,6 +27,7 @@ export default function NewEntry() {
   const navigate = useNavigate();
   const { getEntryById, addEntry, updateEntry } = useEntries();
   const { encryptionKey } = useAuth(); // Get encryptionKey from AuthContext
+  const triggerHaptic = useHapticFeedback(); // Initialize haptic feedback hook
 
   const editId = searchParams.get('id');
   const prefillDate = searchParams.get('date');
@@ -203,6 +205,7 @@ export default function NewEntry() {
         tags,
       });
       if (success) {
+        triggerHaptic(); // Trigger haptic feedback on success
         clearDraft(); // Clear draft on successful save/update
         navigate('/journal');
       }
@@ -214,6 +217,7 @@ export default function NewEntry() {
         tags,
       });
       if (success) {
+        triggerHaptic(); // Trigger haptic feedback on success
         clearDraft(); // Clear draft on successful save/update
         navigate('/journal');
       }

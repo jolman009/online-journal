@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useEntries } from '../hooks/useEntries';
+import { useEntries } from '../hooks/useEntries.jsx';
 import { useTodos } from '../hooks/useTodos';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { buildEntryDateMap, buildTodoDateSet } from '../hooks/useCalendar';

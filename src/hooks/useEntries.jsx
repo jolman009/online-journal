@@ -137,114 +137,115 @@ export function useEntries() {
         };
       }
     }
-    return { ...data, isDecrypted: !data.encrypted_payload };
-
-  const addEntry = async (entry) => {
-    if (!user) return false;
-    if (!encryptionKey) {
-      alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
-      return false;
+        return { ...data, isDecrypted: !data.encrypted_payload };
+      }; // This closing brace was missing, corrected here.
+    
+      const addEntry = async (entry) => {
+        if (!user) return false;
+        if (!encryptionKey) {
+          alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
+          return false;
+        }
+    
+        const sensitiveData = {
+          title: entry.title,
+          content: entry.content,
+          tags: entry.tags || [],
+          // Add mood, location_lat, location_lng, location_name here when they are integrated
+        };
+    
+        const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
+    
+        const { error } = await supabase
+          .from('journal_entries')
+          .insert({
+            user_id: user.id,
+            date: entry.date,
+            pinned: entry.pinned || false, // Ensure pinned is passed
+            encrypted_payload: JSON.stringify({ ciphertext, nonce }), // Store encrypted payload
+            // Do NOT store title, content, tags directly
+          });
+    
+        if (error) {
+          console.error('Failed to save entry:', error.message);
+          alert('Failed to save entry. Please try again.');
+          return false;
+        }
+        // Real-time will handle the state update
+        return true;
+      };
+    
+      const updateEntry = async (id, fields) => {
+        if (!encryptionKey) {
+          alert('E2E encryption is not unlocked. Cannot update encrypted entry.');
+          return false;
+        }
+    
+        const sensitiveData = {};
+        if (fields.title !== undefined) sensitiveData.title = fields.title;
+        if (fields.content !== undefined) sensitiveData.content = fields.content;
+        if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
+        // Add mood, location_lat, location_lng, location_name here when they are integrated
+    
+        const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
+    
+        const updateData = {
+          encrypted_payload: JSON.stringify({ ciphertext, nonce }),
+        };
+    
+        if (fields.date !== undefined) updateData.date = fields.date;
+        if (fields.pinned !== undefined) updateData.pinned = fields.pinned; // Allow updating pinned state
+    
+        const { error } = await supabase
+          .from('journal_entries')
+          .update(updateData)
+          .eq('id', id);
+    
+        if (error) {
+          console.error('Failed to update entry:', error.message);
+          alert('Failed to update entry. Please try again.');
+          return false;
+        }
+        // Real-time will handle the state update
+        return true;
+      };
+    
+      const deleteEntry = async (id) => {
+        const { error } = await supabase
+          .from('journal_entries')
+          .delete()
+          .eq('id', id);
+    
+        if (error) {
+          console.error('Failed to delete entry:', error.message);
+          return false;
+        }
+        // Real-time will handle the state update
+        return true;
+      };
+    
+      const togglePin = async (id, currentPinned) => {
+        const { error } = await supabase
+          .from('journal_entries')
+          .update({ pinned: !currentPinned })
+          .eq('id', id);
+    
+        if (error) {
+          console.error('Failed to toggle pin:', error.message);
+          return false;
+        }
+        // Real-time will handle the state update
+        return true;
+      };
+    
+      return {
+        entries,
+        loading,
+        fetchEntries,
+        getEntryById,
+        addEntry,
+        updateEntry,
+        deleteEntry,
+        togglePin,
+      };
     }
-
-    const sensitiveData = {
-      title: entry.title,
-      content: entry.content,
-      tags: entry.tags || [],
-      // Add mood, location_lat, location_lng, location_name here when they are integrated
-    };
-
-    const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
-
-    const { error } = await supabase
-      .from('journal_entries')
-      .insert({
-        user_id: user.id,
-        date: entry.date,
-        pinned: entry.pinned || false, // Ensure pinned is passed
-        encrypted_payload: JSON.stringify({ ciphertext, nonce }), // Store encrypted payload
-        // Do NOT store title, content, tags directly
-      });
-
-    if (error) {
-      console.error('Failed to save entry:', error.message);
-      alert('Failed to save entry. Please try again.');
-      return false;
-    }
-    // Real-time will handle the state update
-    return true;
-  };
-
-  const updateEntry = async (id, fields) => {
-    if (!encryptionKey) {
-      alert('E2E encryption is not unlocked. Cannot update encrypted entry.');
-      return false;
-    }
-
-    const sensitiveData = {};
-    if (fields.title !== undefined) sensitiveData.title = fields.title;
-    if (fields.content !== undefined) sensitiveData.content = fields.content;
-    if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
-    // Add mood, location_lat, location_lng, location_name here when they are integrated
-
-    const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
-
-    const updateData = {
-      encrypted_payload: JSON.stringify({ ciphertext, nonce }),
-    };
-
-    if (fields.date !== undefined) updateData.date = fields.date;
-    if (fields.pinned !== undefined) updateData.pinned = fields.pinned; // Allow updating pinned state
-
-    const { error } = await supabase
-      .from('journal_entries')
-      .update(updateData)
-      .eq('id', id);
-
-    if (error) {
-      console.error('Failed to update entry:', error.message);
-      alert('Failed to update entry. Please try again.');
-      return false;
-    }
-    // Real-time will handle the state update
-    return true;
-  };
-
-  const deleteEntry = async (id) => {
-    const { error } = await supabase
-      .from('journal_entries')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Failed to delete entry:', error.message);
-      return false;
-    }
-    // Real-time will handle the state update
-    return true;
-  };
-
-  const togglePin = async (id, currentPinned) => {
-    const { error } = await supabase
-      .from('journal_entries')
-      .update({ pinned: !currentPinned })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Failed to toggle pin:', error.message);
-      return false;
-    }
-    // Real-time will handle the state update
-    return true;
-  };
-
-  return {
-    entries,
-    loading,
-    fetchEntries,
-    getEntryById,
-    addEntry,
-    updateEntry,
-    deleteEntry,
-    togglePin,
-  };
-}

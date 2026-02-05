@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { renderMarkdown } from '../utils/markdown';
+import { useHapticFeedback } from '../hooks/useHapticFeedback'; // Import useHapticFeedback
 
 export default function EntryCard({ entry, onDelete, onTogglePin }) {
   const [confirming, setConfirming] = useState(false);
+  const triggerHaptic = useHapticFeedback(); // Initialize haptic feedback hook
 
   const dateObj = new Date(`${entry.date}T00:00:00Z`);
   const formattedDate = dateObj.toLocaleDateString(undefined, {
@@ -15,8 +17,17 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
 
   const handleDelete = async () => {
     const success = await onDelete(entry.id);
-    if (!success) {
+    if (success) {
+      triggerHaptic(); // Trigger haptic feedback on successful delete
+    } else {
       setConfirming(false);
+    }
+  };
+
+  const handleTogglePin = async () => {
+    if (onTogglePin) {
+      await onTogglePin(entry.id, entry.pinned);
+      triggerHaptic(); // Trigger haptic feedback on successful toggle
     }
   };
 
@@ -70,7 +81,7 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
               <button
                 className={`entry-card__btn entry-card__btn--pin${entry.pinned ? ' entry-card__btn--pinned' : ''}`}
                 type="button"
-                onClick={() => onTogglePin(entry.id, entry.pinned)}
+                onClick={handleTogglePin}
                 aria-label={entry.pinned ? 'Unpin entry' : 'Pin entry'}
                 disabled={entry.isDecrypted === false} // Disable if not decrypted
               >

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useHapticFeedback } from './useHapticFeedback'; // Import useHapticFeedback
 
 const THRESHOLD = 80;
 const MAX_PULL = 120;
@@ -9,6 +10,7 @@ export function usePullToRefresh(onRefresh) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const startY = useRef(0);
   const currentY = useRef(0);
+  const triggerHaptic = useHapticFeedback(); // Initialize haptic feedback hook
 
   const handleTouchStart = useCallback((e) => {
     // Only enable pull-to-refresh when at top of page
@@ -42,6 +44,7 @@ export function usePullToRefresh(onRefresh) {
 
       try {
         await onRefresh();
+        triggerHaptic(); // Trigger haptic feedback on successful refresh
       } finally {
         setIsRefreshing(false);
         setPullDistance(0);
@@ -51,7 +54,7 @@ export function usePullToRefresh(onRefresh) {
     }
 
     setIsPulling(false);
-  }, [isPulling, pullDistance, isRefreshing, onRefresh]);
+  }, [isPulling, pullDistance, isRefreshing, onRefresh, triggerHaptic]);
 
   const pullProgress = Math.min(pullDistance / THRESHOLD, 1);
 

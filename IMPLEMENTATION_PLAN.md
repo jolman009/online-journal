@@ -111,7 +111,7 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 | [x] | Error Boundaries | #24 | Wrap pages with error boundary; show fallback UI on crash |
 | [x] | Code Splitting | #25 | Lazy load Calendar, Review, Todos pages (bundle reduced from 508KB to 421KB) |
 | [x] | Infinite Scroll | #23 | Load entries progressively as user scrolls (20 at a time) |
-| [ ] | End-to-End Encryption | NEW | Encrypt journal content client-side before storing; decrypt on read |
+| [x] | End-to-End Encryption | NEW | Encrypt journal content client-side before storing; decrypt on read |
 | [ ] | Biometric Auth | NEW | PIN code, fingerprint, or Face ID to unlock app (WebAuthn API) |
 
 **Database Changes:** None (encryption happens client-side)
@@ -213,7 +213,7 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 | [x] | Responsive Navigation | NEW | Bottom tab bar on mobile (<768px); top nav hidden |
 | [x] | Quick Entry Widget | NEW | Floating action button on Journal page |
 | [x] | Pull-to-Refresh | NEW | Native-feeling refresh gesture on Journal and Todos |
-| [ ] | Haptic Feedback | NEW | Subtle vibrations on interactions (Vibration API) |
+| [x] | Haptic Feedback | NEW | Subtle vibrations on interactions (Vibration API) |
 | [ ] | App Install Prompt | NEW | Smart banner prompting PWA installation on mobile |
 
 **Database Changes:** None
