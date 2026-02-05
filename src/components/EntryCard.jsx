@@ -24,20 +24,27 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
     <article className="entry-card">
       <div className="entry-card__header">
         {entry.pinned && <span className="entry-card__pin-icon" aria-label="Pinned">&#128204;</span>}
-        <h3>{entry.title}</h3>
+        <h3>{entry.isDecrypted === false ? 'Encrypted Entry' : entry.title}</h3>
       </div>
       <time>{formattedDate}</time>
-      {entry.tags && entry.tags.length > 0 && (
+      {entry.tags && entry.tags.length > 0 && entry.isDecrypted !== false && (
         <div className="entry-card__tags">
           {entry.tags.map(tag => (
             <span key={tag} className="entry-card__tag">{tag}</span>
           ))}
         </div>
       )}
-      <div
-        className="entry-card__content"
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.content) }}
-      />
+      {entry.isDecrypted === false ? (
+        <div className="entry-card__content decryption-error">
+          <p className="danger-text">{entry.decryptionError || 'This entry could not be decrypted.'}</p>
+          <p className="muted">Please ensure your master password is correct or check the console for more details.</p>
+        </div>
+      ) : (
+        <div
+          className="entry-card__content"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.content) }}
+        />
+      )}
       <div className="entry-card__actions">
         {confirming ? (
           <>
@@ -65,17 +72,23 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
                 type="button"
                 onClick={() => onTogglePin(entry.id, entry.pinned)}
                 aria-label={entry.pinned ? 'Unpin entry' : 'Pin entry'}
+                disabled={entry.isDecrypted === false} // Disable if not decrypted
               >
                 {entry.pinned ? 'Unpin' : 'Pin'}
               </button>
             )}
-            <Link className="entry-card__btn" to={`/new-entry?id=${entry.id}`}>
+            <Link className="entry-card__btn" to={`/new-entry?id=${entry.id}`}
+                  aria-disabled={entry.isDecrypted === false ? 'true' : undefined}
+                  onClick={(e) => entry.isDecrypted === false && e.preventDefault()}
+                  style={entry.isDecrypted === false ? { pointerEvents: 'none', opacity: 0.6 } : {}}
+            >
               Edit
             </Link>
             <button
               className="entry-card__btn entry-card__btn--delete"
               type="button"
               onClick={() => setConfirming(true)}
+              disabled={entry.isDecrypted === false} // Disable if not decrypted
             >
               Delete
             </button>

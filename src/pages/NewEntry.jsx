@@ -1,39 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import MarkdownEditor from '../components/MarkdownEditor';
 import TagInput from '../components/TagInput';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { encryptData, decryptData } from '../lib/crypto'; // Import crypto utilities
 
 const DRAFT_DEBOUNCE_MS = 2500;
 const DRAFT_KEY = 'entry-draft-new';
 
-function loadDraft() {
-  try {
-    const stored = localStorage.getItem(DRAFT_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (e) {
-    console.warn('Failed to load draft:', e);
-  }
-  return null;
-}
-
-function saveDraft(draft) {
-  try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  } catch (e) {
-    console.warn('Failed to save draft:', e);
-  }
-}
-
-function clearDraft() {
-  try {
-    localStorage.removeItem(DRAFT_KEY);
-  } catch (e) {
-    console.warn('Failed to clear draft:', e);
-  }
-}
+// These functions are now async and depend on encryptionKey
+// They will be passed down via useCallback or similar to avoid re-creation issues
+// Actual implementation will be inside the component
 
 const TEMPLATES = {
   daily: `# Daily Entry\n\n## Morning Intention\nWhat is the one thing this day is for?\n\n- \n\n## Reading\nWhat did I read today? What stayed with me?\n\n- **Book / Article:**\n- **Pages:**\n- **Thought:**\n\n## Work / Craft\nWhat did I actually work on?\n\n- \n\n## Personal / Family\nMoments that mattered.\n\n- `,
@@ -47,52 +25,134 @@ export default function NewEntry() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { getEntryById, addEntry, updateEntry } = useEntries();
+  const { encryptionKey } = useAuth(); // Get encryptionKey from AuthContext
 
   const editId = searchParams.get('id');
   const prefillDate = searchParams.get('date');
   const prefillTemplate = searchParams.get('template');
 
-  const [title, setTitle] = useState(() => {
-    if (editId) return '';
-    const draft = loadDraft();
-    return draft?.title || '';
-  });
-  const [date, setDate] = useState(() => {
-    if (editId) return '';
-    const draft = loadDraft();
-    return draft?.date || prefillDate || '';
-  });
-  const [content, setContent] = useState(() => {
-    if (editId) return '';
-    const draft = loadDraft();
-    return draft?.content || '';
-  });
-  const [template, setTemplate] = useState(() => {
-    if (editId) return '';
-    const draft = loadDraft();
-    return draft?.template || '';
-  });
-  const [tags, setTags] = useState(() => {
-    if (editId) return [];
-    const draft = loadDraft();
-    return draft?.tags || [];
-  });
+  // State for form fields
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState(prefillDate || '');
+  const [content, setContent] = useState('');
+  const [template, setTemplate] = useState('');
+  const [tags, setTags] = useState([]);
   const [loadingEntry, setLoadingEntry] = useState(!!editId);
-  const [hasDraft, setHasDraft] = useState(() => {
-    if (editId) return false;
-    return loadDraft() !== null;
-  });
+  const [hasDraft, setHasDraft] = useState(false);
+  const [loadingDraft, setLoadingDraft] = useState(true); // New state for draft loading
 
   const saveTimerRef = useRef(null);
 
+  // Secure draft functions
+  const saveEncryptedDraft = useCallback(async (draftToSave) => {
+    if (!encryptionKey) {
+      console.warn('E2E encryption key not available. Cannot securely save draft.');
+      // Optionally alert user or display a message
+      return;
+    }
+    try {
+      const encryptedDraft = await encryptData(draftToSave, encryptionKey);
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(encryptedDraft));
+      setHasDraft(true);
+    } catch (e) {
+      console.error('Failed to save encrypted draft:', e);
+    }
+  }, [encryptionKey]);
+
+  const loadEncryptedDraft = useCallback(async () => {
+    if (!encryptionKey) {
+      console.warn('E2E encryption key not available. Cannot load encrypted draft.');
+      setLoadingDraft(false); // Finished trying to load
+      return null;
+    }
+    try {
+      const stored = localStorage.getItem(DRAFT_KEY);
+      if (stored) {
+        const encryptedDraft = JSON.parse(stored);
+        const decryptedDraft = await decryptData(encryptedDraft, encryptionKey);
+        setHasDraft(true);
+        return decryptedDraft;
+      }
+    } catch (e) {
+      console.warn('Failed to load or decrypt draft:', e);
+      // If decryption fails, clear the corrupted draft
+      localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setLoadingDraft(false); // Finished loading attempt
+    }
+    return null;
+  }, [encryptionKey]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+  }, []);
+
+
+  // Effect to load draft or entry on component mount/editId change
   useEffect(() => {
-    if (editId) return;
+    const initializeForm = async () => {
+      setLoadingEntry(true); // Start loading
+
+      if (editId) {
+        const entry = await getEntryById(editId);
+        if (!entry) {
+          alert('Entry not found.');
+          navigate('/journal');
+          return;
+        }
+        if (entry.isDecrypted === false) {
+            alert(entry.decryptionError || 'This entry is encrypted and could not be decrypted.');
+            navigate('/journal');
+            return;
+        }
+        setTitle(entry.title);
+        setDate(entry.date);
+        setContent(entry.content);
+        setTags(entry.tags || []);
+        setTemplate(''); // No template for existing entry
+        setLoadingEntry(false);
+      } else {
+        // Not editing, try to load draft
+        const draft = await loadEncryptedDraft();
+        if (draft) {
+          setTitle(draft.title || '');
+          setDate(draft.date || prefillDate || '');
+          setContent(draft.content || '');
+          setTemplate(draft.template || '');
+          setTags(draft.tags || []);
+        } else {
+          // No draft, set defaults
+          setTitle('');
+          setDate(prefillDate || '');
+          setContent('');
+          setTemplate('');
+          setTags([]);
+        }
+        setLoadingEntry(false);
+      }
+    };
+    initializeForm();
+  }, [editId, getEntryById, navigate, prefillDate, loadEncryptedDraft]); // Added loadEncryptedDraft to deps
+
+  // Effect to apply template content if selected
+  useEffect(() => {
+    if (!editId && prefillTemplate && TEMPLATES[prefillTemplate] && !content) { // Only apply if content is empty
+      setTemplate(prefillTemplate);
+      setContent(TEMPLATES[prefillTemplate]);
+    }
+  }, [prefillTemplate, editId, content]);
+
+
+  // Effect for auto-saving drafts
+  useEffect(() => {
+    if (editId) return; // Don't auto-save drafts when editing an existing entry
 
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
 
-    const hasContent = title.trim() || content.trim() || date;
+    const hasContent = title.trim() || content.trim() || date || tags.length > 0;
 
     if (!hasContent) {
       clearDraft();
@@ -100,9 +160,9 @@ export default function NewEntry() {
       return;
     }
 
-    saveTimerRef.current = setTimeout(() => {
-      saveDraft({ title, date, content, template, tags });
-      setHasDraft(true);
+    saveTimerRef.current = setTimeout(async () => { // Made async here
+      await saveEncryptedDraft({ title, date, content, template, tags });
+      // setHasDraft(true); // Handled inside saveEncryptedDraft
     }, DRAFT_DEBOUNCE_MS);
 
     return () => {
@@ -110,32 +170,8 @@ export default function NewEntry() {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [title, date, content, template, tags, editId]);
+  }, [title, date, content, template, tags, editId, saveEncryptedDraft, clearDraft]);
 
-  useEffect(() => {
-    if (editId) {
-      (async () => {
-        const entry = await getEntryById(editId);
-        if (!entry) {
-          alert('Entry not found.');
-          navigate('/journal');
-          return;
-        }
-        setTitle(entry.title);
-        setDate(entry.date);
-        setContent(entry.content);
-        setTags(entry.tags || []);
-        setLoadingEntry(false);
-      })();
-    }
-  }, [editId]);
-
-  useEffect(() => {
-    if (!editId && prefillTemplate && TEMPLATES[prefillTemplate]) {
-      setTemplate(prefillTemplate);
-      setContent(TEMPLATES[prefillTemplate]);
-    }
-  }, [prefillTemplate]);
 
   const handleTemplateChange = (e) => {
     const selected = e.target.value;
@@ -151,8 +187,13 @@ export default function NewEntry() {
     e.preventDefault();
     if (!title.trim() || !date || !content.trim()) {
       alert('Please fill in all fields.');
-      return;
+      return false; // Return false to indicate submission failure
     }
+    if (!encryptionKey) {
+        alert('E2E encryption is not unlocked. Cannot save or update entry securely.');
+        return false;
+    }
+
 
     if (editId) {
       const success = await updateEntry(editId, {
@@ -161,7 +202,10 @@ export default function NewEntry() {
         content: content.trim(),
         tags,
       });
-      if (success) navigate('/journal');
+      if (success) {
+        clearDraft(); // Clear draft on successful save/update
+        navigate('/journal');
+      }
     } else {
       const success = await addEntry({
         title: title.trim(),
@@ -170,7 +214,7 @@ export default function NewEntry() {
         tags,
       });
       if (success) {
-        clearDraft();
+        clearDraft(); // Clear draft on successful save/update
         navigate('/journal');
       }
     }
@@ -186,8 +230,32 @@ export default function NewEntry() {
     setHasDraft(false);
   };
 
-  if (loadingEntry) {
-    return <p className="muted">Loading entry...</p>;
+  if (loadingEntry || loadingDraft) { // Added loadingDraft
+    return <p className="muted">Loading entry and draft...</p>;
+  }
+
+  // If E2E is not unlocked, show a message and prevent editing/saving
+  if (!encryptionKey) {
+    return (
+      <>
+        <div className="page-header">
+            <div>
+                <p className="eyebrow">{editId ? 'Update' : 'Create'}</p>
+                <h2>{editId ? 'Edit Entry' : 'Add a New Entry'}</h2>
+                <p className="muted">
+                    Your journal is currently locked. Please unlock E2E encryption to manage entries.
+                </p>
+            </div>
+            <Link className="btn ghost" to="/journal">Back to journal</Link>
+        </div>
+        <div className="form-card">
+            <p className="danger-text">
+                E2E encryption is not unlocked. You cannot create or edit entries securely.
+                Please provide your master password to continue.
+            </p>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -205,7 +273,7 @@ export default function NewEntry() {
 
       {hasDraft && !editId && (
         <div className="draft-indicator">
-          <span className="draft-indicator__text">Draft saved</span>
+          <span className="draft-indicator__text">Draft saved securely</span>
           <button
             type="button"
             className="draft-indicator__discard"

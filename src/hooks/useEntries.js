@@ -1,40 +1,96 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { encryptData, decryptData } from '../lib/crypto'; // Import crypto utilities
 
 export function useEntries() {
+  const { user, encryptionKey } = useAuth(); // Access user and encryptionKey from AuthContext
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
+    // Fetch only non-sensitive data and encrypted_payload
     const { data, error } = await supabase
       .from('journal_entries')
-      .select('*')
+      .select('id, user_id, date, pinned, created_at, updated_at, encrypted_payload') // Select encrypted_payload
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Failed to fetch journal entries:', error.message);
       setEntries([]);
     } else {
-      setEntries(data || []);
+      // Decrypt entries if key is available
+      const decryptedEntries = await Promise.all(
+        (data || []).map(async (entry) => {
+          if (entry.encrypted_payload && encryptionKey) {
+            try {
+              const decrypted = await decryptData(JSON.parse(entry.encrypted_payload), encryptionKey);
+              return { ...entry, ...decrypted, encrypted_payload: undefined, isDecrypted: true }; // Merge decrypted data
+            } catch (decryptionError) {
+              console.error('Decryption failed for entry:', entry.id, decryptionError);
+              const errorMessage = decryptionError.message.includes('Failed to decrypt data')
+                ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
+                : decryptionError.message;
+              return {
+                ...entry,
+                content: '[Decryption Failed]',
+                title: '[Encrypted]',
+                tags: [],
+                encrypted_payload: undefined,
+                isDecrypted: false,
+                decryptionError: errorMessage,
+              };
+            }
+          }
+          return { ...entry, isDecrypted: !entry.encrypted_payload }; // If no encrypted_payload, it's not encrypted
+        })
+      );
+      setEntries(decryptedEntries);
     }
     setLoading(false);
-    return data || [];
-  }, []);
+    return decryptedEntries || []; // Return decrypted entries
+  }, [encryptionKey]); // Depend on encryptionKey for re-fetching/re-decrypting
 
-  // Real-time subscription
+
+  // Real-time subscription - will need to decrypt payload for new/updated entries
   useEffect(() => {
     const channel = supabase
       .channel('entries-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'journal_entries' },
-        (payload) => {
+        async (payload) => { // Make async to allow decryption
+          let processedEntry = payload.new;
+          if (processedEntry && processedEntry.encrypted_payload && encryptionKey) {
+            try {
+              const decrypted = await decryptData(JSON.parse(processedEntry.encrypted_payload), encryptionKey);
+              processedEntry = { ...processedEntry, ...decrypted, encrypted_payload: undefined, isDecrypted: true };
+            } catch (decryptionError) {
+              console.error('Real-time decryption failed for entry:', processedEntry.id, decryptionError);
+              const errorMessage = decryptionError.message.includes('Failed to decrypt data')
+                ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
+                : decryptionError.message;
+              processedEntry = {
+                ...processedEntry,
+                content: '[Decryption Failed]',
+                title: '[Encrypted]',
+                tags: [],
+                encrypted_payload: undefined,
+                isDecrypted: false,
+                decryptionError: errorMessage,
+              };
+            }
+          } else if (processedEntry) {
+            processedEntry = { ...processedEntry, isDecrypted: !processedEntry.encrypted_payload };
+          }
+
+
           if (payload.eventType === 'INSERT') {
-            setEntries(prev => [payload.new, ...prev]);
+            setEntries(prev => [processedEntry, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
             setEntries(prev =>
-              prev.map(e => (e.id === payload.new.id ? payload.new : e))
+              prev.map(e => (e.id === payload.new.id ? processedEntry : e))
             );
           } else if (payload.eventType === 'DELETE') {
             setEntries(prev => prev.filter(e => e.id !== payload.old.id));
@@ -46,12 +102,13 @@ export function useEntries() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [encryptionKey]); // Depend on encryptionKey for real-time decryption
+
 
   const getEntryById = async (id) => {
     const { data, error } = await supabase
       .from('journal_entries')
-      .select('*')
+      .select('id, user_id, date, pinned, created_at, updated_at, encrypted_payload') // Select encrypted_payload
       .eq('id', id)
       .single();
 
@@ -59,22 +116,53 @@ export function useEntries() {
       console.error('Failed to fetch entry:', error.message);
       return null;
     }
-    return data;
-  };
+
+    if (data && data.encrypted_payload && encryptionKey) {
+      try {
+        const decrypted = await decryptData(JSON.parse(data.encrypted_payload), encryptionKey);
+        return { ...data, ...decrypted, encrypted_payload: undefined, isDecrypted: true }; // Merge decrypted data
+      } catch (decryptionError) {
+        console.error('Decryption failed for entry:', data.id, decryptionError);
+        const errorMessage = decryptionError.message.includes('Failed to decrypt data')
+          ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
+          : decryptionError.message;
+        return {
+          ...data,
+          content: '[Decryption Failed]',
+          title: '[Encrypted]',
+          tags: [],
+          encrypted_payload: undefined,
+          isDecrypted: false,
+          decryptionError: errorMessage,
+        };
+      }
+    }
+    return { ...data, isDecrypted: !data.encrypted_payload };
 
   const addEntry = async (entry) => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
+    if (!encryptionKey) {
+      alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
+      return false;
+    }
+
+    const sensitiveData = {
+      title: entry.title,
+      content: entry.content,
+      tags: entry.tags || [],
+      // Add mood, location_lat, location_lng, location_name here when they are integrated
+    };
+
+    const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
 
     const { error } = await supabase
       .from('journal_entries')
       .insert({
         user_id: user.id,
-        title: entry.title,
         date: entry.date,
-        content: entry.content,
-        tags: entry.tags || [],
-        pinned: false,
+        pinned: entry.pinned || false, // Ensure pinned is passed
+        encrypted_payload: JSON.stringify({ ciphertext, nonce }), // Store encrypted payload
+        // Do NOT store title, content, tags directly
       });
 
     if (error) {
@@ -87,14 +175,25 @@ export function useEntries() {
   };
 
   const updateEntry = async (id, fields) => {
-    const updateData = {
-      title: fields.title,
-      date: fields.date,
-      content: fields.content,
-    };
-    if (fields.tags !== undefined) {
-      updateData.tags = fields.tags;
+    if (!encryptionKey) {
+      alert('E2E encryption is not unlocked. Cannot update encrypted entry.');
+      return false;
     }
+
+    const sensitiveData = {};
+    if (fields.title !== undefined) sensitiveData.title = fields.title;
+    if (fields.content !== undefined) sensitiveData.content = fields.content;
+    if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
+    // Add mood, location_lat, location_lng, location_name here when they are integrated
+
+    const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
+
+    const updateData = {
+      encrypted_payload: JSON.stringify({ ciphertext, nonce }),
+    };
+
+    if (fields.date !== undefined) updateData.date = fields.date;
+    if (fields.pinned !== undefined) updateData.pinned = fields.pinned; // Allow updating pinned state
 
     const { error } = await supabase
       .from('journal_entries')
