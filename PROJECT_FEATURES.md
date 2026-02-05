@@ -2,20 +2,21 @@
 
 ## Overview
 
-My Online Journal is a cloud-synced journaling and task management application built with vanilla JavaScript and Supabase. It features structured journal entries with templates, a month-view calendar with visual indicators, and a hybrid date-optional TODO system. All data syncs across devices via Supabase with row-level security.
+My Online Journal is a cloud-synced journaling and task management application built with React, Vite, and Supabase. It features structured journal entries with markdown support and templates, a month-view calendar with visual indicators, a hybrid date-optional TODO system, and a weekly review dashboard. All data syncs across devices via Supabase with row-level security.
 
 ---
 
 ## Pages
 
-| Page | File | Purpose |
-|---------|----------|
-| Home | `index.html` | Landing page with feature overview and CTAs |
-| Sign In | `login.html` | Email/password authentication with sign-up toggle |
-| Journal | `journal.html` | Entry list with calendar widget and todo widget |
-| New Entry | `new-entry.html` | Entry creation form with template selector |
-| Calendar | `calendar.html` | Full-page month-view calendar with date filtering |
-| Todos | `todos.html` | Task management with Scheduled and Inbox sections |
+| Page | Route | Component | Purpose |
+|------|-------|-----------|---------|
+| Home | `/` | `Home.jsx` | Landing page with feature overview and CTAs |
+| Sign In | `/login` | `Login.jsx` | Email/password authentication with sign-up toggle |
+| Journal | `/journal` | `Journal.jsx` | Entry list with calendar widget and todo widget |
+| New Entry | `/new-entry` | `NewEntry.jsx` | Entry creation/editing form with template selector and markdown editor |
+| Calendar | `/calendar` | `CalendarPage.jsx` | Full-page month-view calendar with date filtering |
+| Todos | `/todos` | `Todos.jsx` | Task management with Scheduled and Inbox sections |
+| Weekly Review | `/review` | `WeeklyReview.jsx` | Week stats, heatmap, entries/todos summary |
 
 ---
 
@@ -165,12 +166,13 @@ All pages share a sticky header with:
 
 ## Technical Architecture
 
-- **Frontend**: Vanilla HTML/CSS/JS (no framework)
+- **Frontend**: React 19 + Vite 7 (migrated from vanilla JS)
 - **Backend**: Supabase (PostgreSQL + Auth + Row Level Security)
-- **Server**: Express.js for static file serving
-- **Scripts load order**: `supabase.js` -> `calendar.js` -> `todos.js` -> `journal.js`
-- **Routing**: `data-page` attribute on `<body>` dispatched via DOMContentLoaded in journal.js
-- **Security**: RLS policies scope all data to the authenticated user; HTML escaped in rendered content
+- **Routing**: React Router v7 with SPA client-side navigation
+- **State**: React Context (AuthContext, ThemeContext) + custom hooks (useEntries, useTodos, useCalendar)
+- **Markdown**: marked + DOMPurify for safe rendering
+- **Deployment**: Vercel with SPA routing config
+- **Security**: RLS policies scope all data to the authenticated user; HTML sanitized via DOMPurify
 
 ---
 
@@ -202,23 +204,29 @@ All pages share a sticky header with:
 
 # Recommended Future Features
 
+> **Implementation tracking:** See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for phased roadmap and progress.
+
 ## High Impact
 
 ### 1. Entry Search
 
 Add a search bar to journal.html that filters entries by title and content. Implement client-side with a debounced text input filtering `window._journalEntries`, or server-side with Supabase full-text search (`textSearch` on title + content columns) for larger datasets. This directly addresses the inability to find past entries as the journal grows.
 
-### 2. Edit and Delete Entries
+### 2. Edit and Delete Entries ✅ IMPLEMENTED
 
-Currently entries can only be created, not modified. Add an edit button on each entry card that navigates to `new-entry.html?id=<entry-id>`, pre-filling the form with existing data and switching the submit handler to an UPDATE operation. Add a delete button with a confirmation dialog. This is a basic CRUD gap that limits practical daily use.
+~~Currently entries can only be created, not modified. Add an edit button on each entry card that navigates to `new-entry.html?id=<entry-id>`, pre-filling the form with existing data and switching the submit handler to an UPDATE operation. Add a delete button with a confirmation dialog. This is a basic CRUD gap that limits practical daily use.~~
+
+*Implemented in commit `09e2373`. EntryCard includes Edit link and Delete button with confirmation dialog.*
 
 ### 3. Streak Tracker and Writing Stats
 
 Display a writing streak counter (consecutive days with entries) on the journal page or home page. Show stats like total entries, entries this week/month, and longest streak. This gamification encourages consistency — the core value proposition of a journal app.
 
-### 4. Rich Text / Markdown Rendering
+### 4. Rich Text / Markdown Rendering ✅ IMPLEMENTED
 
-Replace the plain textarea with a lightweight editor (e.g., Markdown preview pane or a minimal contenteditable area). Render stored content with bold, italic, headers, and lists when displaying entries. This makes entries more readable without requiring a heavy editor library.
+~~Replace the plain textarea with a lightweight editor (e.g., Markdown preview pane or a minimal contenteditable area). Render stored content with bold, italic, headers, and lists when displaying entries. This makes entries more readable without requiring a heavy editor library.~~
+
+*Implemented in commit `05c38ea`. MarkdownEditor component with Write/Preview tabs using marked + DOMPurify.*
 
 ### 5. Todo Due Date Reminders
 
@@ -234,13 +242,17 @@ Allow entries and todos to be tagged (e.g., "work", "personal", "health"). Store
 
 Let users pin important entries to the top of the journal view. A simple `pinned` boolean column on `journal_entries` with a star/pin icon toggle. Pinned entries render first regardless of sort order.
 
-### 8. Weekly Review Dashboard
+### 8. Weekly Review Dashboard ✅ IMPLEMENTED
 
-A dedicated page that aggregates the current week's data: entries written, todos completed vs. pending, days with entries (mini heatmap), and a prompt to write a weekly reflection using the existing template. This ties the journal and todo systems together into a review habit.
+~~A dedicated page that aggregates the current week's data: entries written, todos completed vs. pending, days with entries (mini heatmap), and a prompt to write a weekly reflection using the existing template. This ties the journal and todo systems together into a review habit.~~
 
-### 9. Dark/Light Theme Toggle
+*Implemented in commit `05c38ea`. WeeklyReview page at `/review` with stats, day heatmap, week navigation, and reflection prompt.*
 
-Add a theme toggle in the nav or settings. Define a `:root[data-theme="light"]` override in CSS with inverted colors. Store preference in localStorage. The existing CSS variable system makes this straightforward to implement.
+### 9. Dark/Light Theme Toggle ✅ IMPLEMENTED
+
+~~Add a theme toggle in the nav or settings. Define a `:root[data-theme="light"]` override in CSS with inverted colors. Store preference in localStorage. The existing CSS variable system makes this straightforward to implement.~~
+
+*Implemented in commit `9e1ffa1`. ThemeContext with toggle button in Layout, CSS variables for both themes, localStorage persistence.*
 
 ### 10. Export Data
 
