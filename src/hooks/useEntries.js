@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
 
 export function useEntries() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('journal_entries')
@@ -20,7 +20,33 @@ export function useEntries() {
     }
     setLoading(false);
     return data || [];
-  };
+  }, []);
+
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('entries-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'journal_entries' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setEntries(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setEntries(prev =>
+              prev.map(e => (e.id === payload.new.id ? payload.new : e))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setEntries(prev => prev.filter(e => e.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const getEntryById = async (id) => {
     const { data, error } = await supabase
@@ -56,6 +82,7 @@ export function useEntries() {
       alert('Failed to save entry. Please try again.');
       return false;
     }
+    // Real-time will handle the state update
     return true;
   };
 
@@ -79,6 +106,7 @@ export function useEntries() {
       alert('Failed to update entry. Please try again.');
       return false;
     }
+    // Real-time will handle the state update
     return true;
   };
 
@@ -92,7 +120,7 @@ export function useEntries() {
       console.error('Failed to delete entry:', error.message);
       return false;
     }
-    setEntries(prev => prev.filter(e => e.id !== id));
+    // Real-time will handle the state update
     return true;
   };
 
@@ -106,9 +134,7 @@ export function useEntries() {
       console.error('Failed to toggle pin:', error.message);
       return false;
     }
-    setEntries(prev =>
-      prev.map(e => (e.id === id ? { ...e, pinned: !currentPinned } : e))
-    );
+    // Real-time will handle the state update
     return true;
   };
 

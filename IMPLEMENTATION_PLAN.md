@@ -165,15 +165,15 @@ CREATE TABLE entry_attachments (
 
 ---
 
-## Phase 6: Real-Time, Offline & Notifications
+## Phase 6: Real-Time, Offline & Notifications (Core 2 ✅ COMPLETE)
 
 *Advanced sync and engagement capabilities*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Real-Time Sync | #17 | Supabase Realtime subscriptions for live updates |
+| [x] | Real-Time Sync | #17 | Supabase Realtime subscriptions for live updates across tabs/devices |
 | [ ] | Offline PWA | #16 | Service worker, asset caching, background sync queue |
-| [ ] | Drag-and-Drop Todos | #20 | Reorder todos within sections using @dnd-kit |
+| [x] | Drag-and-Drop Todos | #20 | Reorder inbox todos using @dnd-kit with sort_order persistence |
 | [ ] | Push Reminders | NEW | Daily journaling reminders via push notifications; customizable time |
 | [ ] | Cross-Device Sync | NEW | Robust conflict resolution for edits made on multiple devices |
 
@@ -274,5 +274,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 5 | Split-Pane Preview | Complete |
 | 2026-02-05 | 5 | Undo/Redo | Complete |
 | 2026-02-05 | 5 | Rich Text Toolbar | Complete |
+| 2026-02-05 | 6 | Real-Time Sync | Complete |
+| 2026-02-05 | 6 | Drag-and-Drop Todos | Complete |
 
 *Update this table as features are completed.*

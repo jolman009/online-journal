@@ -2394,3 +2394,107 @@ input[type="password"]:focus {
         display: none;
     }
 }
+
+/* ===== Phase 6: Drag and Drop Todos ===== */
+
+.sortable-todo-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--glass-2);
+    border: 1px solid var(--glass-4);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    transition: box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.sortable-todo-wrapper:hover {
+    border-color: var(--glass-5);
+}
+
+.sortable-todo-wrapper--dragging {
+    box-shadow: var(--shadow);
+    z-index: 10;
+}
+
+.sortable-todo-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    padding: 0;
+    background: var(--glass-3);
+    border: none;
+    border-right: 1px solid var(--glass-4);
+    border-radius: var(--radius) 0 0 var(--radius);
+    color: var(--muted);
+    font-size: 0.9rem;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.sortable-todo-handle:hover {
+    background: var(--glass-4);
+    color: var(--text);
+}
+
+.sortable-todo-handle:active {
+    cursor: grabbing;
+}
+
+.sortable-todo-wrapper .todo-item {
+    flex: 1;
+    margin: 0;
+    border: none;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: transparent;
+}
+
+.todo-list--sortable {
+    min-height: 50px;
+}
+
+.todo-section__hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 0.5rem;
+}
+
+/* Real-time sync indicator */
+.realtime-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.5rem;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: var(--success-text);
+}
+
+.realtime-indicator__dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-strong);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@media (max-width: 600px) {
+    .sortable-todo-handle {
+        width: 28px;
+        font-size: 0.8rem;
+    }
+
+    .todo-section__hint {
+        display: none;
+    }
+}
