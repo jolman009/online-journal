@@ -1,119 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Online Journal</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="supabase.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Online Journal</title>
 </head>
-<body data-page="home">
-    <header class="site-header">
-        <div class="brand">
-            <span class="logo-dot" aria-hidden="true"></span>
-            <h1>My Online Journal</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="index.html" class="is-active">Home</a></li>
-                <li><a href="journal.html">View Journal</a></li>
-                <li><a href="calendar.html">Calendar</a></li>
-                <li><a href="todos.html">Todos</a></li>
-                <li><a href="new-entry.html" class="pill">Add Entry</a></li>
-                <li><a href="login.html" id="authNavLink">Sign In</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main class="shell">
-        <section class="hero">
-            <div class="hero__text">
-                <p class="eyebrow">Synced across devices</p>
-                <h2>Write with clarity. Access from anywhere.</h2>
-                <p>
-                    Capture moments, ideas, and reflections in a focused space.
-                    Entries sync securely to the cloud so you can write from any device.
-                </p>
-                <div class="hero__actions">
-                    <a class="btn primary" href="new-entry.html">Start a new entry</a>
-                    <a class="btn ghost" href="journal.html">Browse journal</a>
-                </div>
-                <div class="meta">
-                    <span class="meta__pill">Cloud-synced</span>
-                    <span class="meta__pill">Cross-device</span>
-                    <span class="meta__pill">Secure</span>
-                </div>
-            </div>
-            <div class="hero__card">
-                <div class="hero__card-header">
-                    <span class="dot red"></span>
-                    <span class="dot amber"></span>
-                    <span class="dot green"></span>
-                    <span class="card-label">Preview</span>
-                </div>
-                <div class="hero__card-body">
-                    <p class="muted">Today</p>
-                    <h3>Small moments worth saving</h3>
-                    <p>
-                        Take 5 minutes to note what you learned, who you met, or what made you
-                        pause. Revisit the thread later in your entries list.
-                    </p>
-                    <ul class="checklist">
-                        <li>Quick capture</li>
-                        <li>Cloud storage</li>
-                        <li>Sorted by recency</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <section class="feature-grid">
-            <div class="feature-card">
-                <div class="icon">✍️</div>
-                <h3>Frictionless entry</h3>
-                <p>Title, date, and content in one clean form. Templates help you start fast.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🔒</div>
-                <h3>Yours to keep</h3>
-                <p>Your entries are private, secured with your account, and synced across all your devices.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🧭</div>
-                <h3>Guided structure</h3>
-                <p>Daily, weekly, reflection, and book-note templates keep thoughts organized.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🌗</div>
-                <h3>Accessible contrast</h3>
-                <p>High contrast palette, focus states, and semantic markup for all readers.</p>
-            </div>
-        </section>
-
-        <section class="callout">
-            <div>
-                <h3>Stay consistent, stay curious.</h3>
-                <p>Set a cadence, revisit past entries, and spot patterns over time.</p>
-            </div>
-            <a class="btn primary" href="journal.html">Open journal</a>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 My Online Journal</p>
-    </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const link = document.getElementById('authNavLink');
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                link.textContent = 'Sign Out';
-                link.href = '#';
-                link.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await signOut();
-                });
-            }
-        });
-    </script>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
