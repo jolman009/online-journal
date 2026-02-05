@@ -125,19 +125,19 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 
 ---
 
-## Phase 5: Advanced Editor & Media
+## Phase 5: Advanced Editor & Media (Editor ✅ COMPLETE)
 
 *Rich editing experience with multimedia support*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Split-Pane Preview | #22 | Side-by-side editor with live markdown preview |
-| [ ] | Undo/Redo | #21 | Cmd+Z / Cmd+Shift+Z support with history stack |
+| [x] | Split-Pane Preview | #22 | Side-by-side editor with live markdown preview + synced scroll |
+| [x] | Undo/Redo | #21 | Ctrl+Z / Ctrl+Shift+Z support with 50-state history stack |
 | [ ] | Animated Transitions | #19 | Smooth page transitions using framer-motion |
 | [ ] | Photo Attachments | NEW | Upload and embed photos in entries; image gallery view |
 | [ ] | Video Attachments | NEW | Embed video clips in entries; playback within app |
 | [ ] | Voice Notes | NEW | Record audio directly in app; transcription optional |
-| [ ] | Rich Text Toolbar | NEW | WYSIWYG formatting buttons (bold, italic, lists, headers) |
+| [x] | Rich Text Toolbar | NEW | Formatting buttons (bold, italic, headers, lists, code, links) |
 
 **Database Changes:**
 ```sql
@@ -271,5 +271,8 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 4 | Error Boundaries | Complete |
 | 2026-02-05 | 4 | Code Splitting | Complete |
 | 2026-02-05 | 4 | Infinite Scroll | Complete |
+| 2026-02-05 | 5 | Split-Pane Preview | Complete |
+| 2026-02-05 | 5 | Undo/Redo | Complete |
+| 2026-02-05 | 5 | Rich Text Toolbar | Complete |
 
 *Update this table as features are completed.*

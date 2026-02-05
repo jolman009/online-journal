@@ -2185,3 +2185,212 @@ input[type="password"]:focus {
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
+
+/* ===== Phase 5: Enhanced Markdown Editor ===== */
+
+.markdown-editor {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--glass-5);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--glass-2);
+}
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--glass-3);
+    border-bottom: 1px solid var(--glass-4);
+}
+
+.markdown-editor .editor-tabs {
+    display: flex;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+}
+
+.markdown-editor .editor-tab {
+    padding: 0.35rem 0.75rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.markdown-editor .editor-tab:hover {
+    background: var(--glass-4);
+    color: var(--text);
+}
+
+.markdown-editor .editor-tab--active {
+    background: var(--glass-5);
+    border-color: var(--glass-6);
+    color: var(--text-strong);
+}
+
+.markdown-editor .editor-tabs__word-count {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+/* Editor Toolbar */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.5rem;
+    background: var(--glass-2);
+    border-bottom: 1px solid var(--glass-4);
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.editor-toolbar__group {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    flex-wrap: wrap;
+}
+
+.editor-toolbar__group--right {
+    margin-left: auto;
+}
+
+.editor-toolbar__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.editor-toolbar__btn:hover:not(:disabled) {
+    background: var(--glass-4);
+    border-color: var(--glass-5);
+}
+
+.editor-toolbar__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.editor-toolbar__divider {
+    width: 1px;
+    height: 20px;
+    background: var(--glass-5);
+    margin: 0 0.35rem;
+}
+
+/* Editor Content */
+.editor-content {
+    display: flex;
+    min-height: 300px;
+}
+
+.markdown-editor--write .editor-content {
+    flex-direction: column;
+}
+
+.markdown-editor--preview .editor-content {
+    flex-direction: column;
+}
+
+.markdown-editor--split .editor-content {
+    flex-direction: row;
+}
+
+.markdown-editor--split .editor-pane {
+    flex: 1;
+    min-width: 0;
+}
+
+.markdown-editor--split .editor-pane--write {
+    border-right: 1px solid var(--glass-4);
+}
+
+.markdown-editor .editor-pane {
+    display: flex;
+    flex-direction: column;
+}
+
+.markdown-editor .editor-pane--write {
+    flex: 1;
+}
+
+.markdown-editor .editor-pane--write textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 300px;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+}
+
+.markdown-editor .editor-pane--write textarea::placeholder {
+    color: var(--muted);
+}
+
+.markdown-editor .editor-pane--preview {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: 500px;
+    background: var(--glass-1);
+}
+
+/* Split mode responsive */
+@media (max-width: 768px) {
+    .markdown-editor--split .editor-content {
+        flex-direction: column;
+    }
+
+    .markdown-editor--split .editor-pane--write {
+        border-right: none;
+        border-bottom: 1px solid var(--glass-4);
+    }
+
+    .markdown-editor--split .editor-pane {
+        min-height: 200px;
+    }
+
+    .markdown-editor--split .editor-pane--preview {
+        max-height: 300px;
+    }
+
+    .editor-toolbar {
+        padding: 0.3rem;
+    }
+
+    .editor-toolbar__btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+    }
+
+    .editor-toolbar__divider {
+        display: none;
+    }
+}
