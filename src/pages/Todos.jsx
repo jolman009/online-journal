@@ -1,11 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTodos } from '../hooks/useTodos';
 import TodoItem from '../components/TodoItem';
+import TagInput from '../components/TagInput';
+import TagFilter from '../components/TagFilter';
+import { exportTodos } from '../utils/export';
 
 export default function Todos() {
   const { todos, fetchTodos, addTodo, toggleTodo, deleteTodo } = useTodos();
   const [todoText, setTodoText] = useState('');
   const [todoDate, setTodoDate] = useState('');
+  const [todoTags, setTodoTags] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
 
   useEffect(() => {
     fetchTodos();
@@ -17,34 +22,61 @@ export default function Todos() {
     const newTodo = await addTodo({
       text: todoText.trim(),
       date: todoDate || null,
+      tags: todoTags,
     });
     if (newTodo) {
       setTodoText('');
       setTodoDate('');
+      setTodoTags([]);
     }
+  };
+
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    todos.forEach(t => (t.tags || []).forEach(tag => tagSet.add(tag)));
+    return [...tagSet].sort();
+  }, [todos]);
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const filterByTags = (items) => {
+    if (selectedTags.length === 0) return items;
+    return items.filter(t =>
+      selectedTags.every(tag => (t.tags || []).includes(tag))
+    );
   };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayStr = today.toISOString().split('T')[0];
 
-  const overdue = todos
-    .filter(t => t.date !== null && !t.completed && t.date < todayStr)
-    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const overdue = filterByTags(
+    todos
+      .filter(t => t.date !== null && !t.completed && t.date < todayStr)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  );
 
-  const scheduled = todos
-    .filter(t => t.date !== null && (t.completed || t.date >= todayStr))
-    .sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      return (a.date || '').localeCompare(b.date || '');
-    });
+  const scheduled = filterByTags(
+    todos
+      .filter(t => t.date !== null && (t.completed || t.date >= todayStr))
+      .sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return (a.date || '').localeCompare(b.date || '');
+      })
+  );
 
-  const inbox = todos
-    .filter(t => t.date === null)
-    .sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
+  const inbox = filterByTags(
+    todos
+      .filter(t => t.date === null)
+      .sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return new Date(b.created_at) - new Date(a.created_at);
+      })
+  );
 
   return (
     <>
@@ -54,6 +86,14 @@ export default function Todos() {
           <h2>Your Todos</h2>
           <p className="muted">Manage scheduled and inbox tasks.</p>
         </div>
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={() => exportTodos(todos)}
+          disabled={todos.length === 0}
+        >
+          Export JSON
+        </button>
       </div>
 
       <section className="form-card todo-add-card">
@@ -77,7 +117,17 @@ export default function Todos() {
           />
           <button className="btn primary" type="submit">Add</button>
         </form>
+        <div className="todo-add-tags">
+          <TagInput tags={todoTags} onChange={setTodoTags} placeholder="Add tags..." />
+        </div>
       </section>
+
+      <TagFilter
+        availableTags={availableTags}
+        selectedTags={selectedTags}
+        onToggle={handleTagToggle}
+        onClear={() => setSelectedTags([])}
+      />
 
       {overdue.length > 0 && (
         <section className="todo-section todo-section--overdue">

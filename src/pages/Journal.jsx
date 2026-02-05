@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import { useTodos } from '../hooks/useTodos';
@@ -6,6 +6,8 @@ import { buildEntryDateMap, buildTodoDateSet } from '../hooks/useCalendar';
 import EntryCard from '../components/EntryCard';
 import Calendar from '../components/Calendar';
 import TodosWidget from '../components/TodosWidget';
+import TagFilter from '../components/TagFilter';
+import { exportEntries } from '../utils/export';
 
 export default function Journal() {
   const { entries, fetchEntries, deleteEntry, togglePin } = useEntries();
@@ -13,6 +15,8 @@ export default function Journal() {
   const [filterDate, setFilterDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [selectedTags, setSelectedTags] = useState([]);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     fetchEntries();
@@ -29,6 +33,18 @@ export default function Journal() {
   const entryDateMap = buildEntryDateMap(entries);
   const todoDateSet = buildTodoDateSet(todos);
 
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    entries.forEach(e => (e.tags || []).forEach(t => tagSet.add(t)));
+    return [...tagSet].sort();
+  }, [entries]);
+
+  const handleTagToggle = (tag) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
   const displayedEntries = useMemo(() => {
     let filtered = entries;
 
@@ -44,13 +60,19 @@ export default function Journal() {
       );
     }
 
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(e =>
+        selectedTags.every(tag => (e.tags || []).includes(tag))
+      );
+    }
+
     // Sort pinned entries first
     return [...filtered].sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       return 0;
     });
-  }, [entries, filterDate, debouncedQuery]);
+  }, [entries, filterDate, debouncedQuery, selectedTags]);
 
   const formattedFilterDate = filterDate
     ? new Date(filterDate + 'T00:00:00Z').toLocaleDateString(undefined, {
@@ -69,14 +91,25 @@ export default function Journal() {
           <h2>Your Journal Entries</h2>
           <p className="muted">Newest first. Synced across your devices.</p>
         </div>
-        <Link className="btn primary" to="/new-entry">Add new entry</Link>
+        <div className="page-header__actions">
+          <button
+            type="button"
+            className="btn ghost"
+            onClick={() => exportEntries(entries)}
+            disabled={entries.length === 0}
+          >
+            Export JSON
+          </button>
+          <Link className="btn primary" to="/new-entry">Add new entry</Link>
+        </div>
       </div>
 
       <div className="journal-search">
         <input
+          ref={searchInputRef}
           type="text"
           className="journal-search__input"
-          placeholder="Search entries by title or content..."
+          placeholder="Search entries by title or content... (press / to focus)"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           aria-label="Search journal entries"
@@ -92,6 +125,13 @@ export default function Journal() {
           </button>
         )}
       </div>
+
+      <TagFilter
+        availableTags={availableTags}
+        selectedTags={selectedTags}
+        onToggle={handleTagToggle}
+        onClear={() => setSelectedTags([])}
+      />
 
       <div className="calendar-widget">
         <Calendar

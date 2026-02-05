@@ -27,6 +27,13 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
         <h3>{entry.title}</h3>
       </div>
       <time>{formattedDate}</time>
+      {entry.tags && entry.tags.length > 0 && (
+        <div className="entry-card__tags">
+          {entry.tags.map(tag => (
+            <span key={tag} className="entry-card__tag">{tag}</span>
+          ))}
+        </div>
+      )}
       <div
         className="entry-card__content"
         dangerouslySetInnerHTML={{ __html: renderMarkdown(entry.content) }}

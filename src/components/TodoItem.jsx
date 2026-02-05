@@ -43,6 +43,13 @@ export default function TodoItem({ todo, onToggle, onDelete }) {
       />
       <span className="todo-item__text">{todo.text}</span>
       <span className="todo-item__meta">
+        {todo.tags && todo.tags.length > 0 && (
+          <span className="todo-item__tags">
+            {todo.tags.map(tag => (
+              <span key={tag} className="todo-item__tag">{tag}</span>
+            ))}
+          </span>
+        )}
         {dateBadge && (
           <span className={`todo-item__date-badge${isOverdue ? ' todo-item__date-badge--overdue' : ''}`}>
             {dateBadge}

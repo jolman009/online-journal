@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import MarkdownEditor from '../components/MarkdownEditor';
+import TagInput from '../components/TagInput';
 
 const DRAFT_DEBOUNCE_MS = 2500;
 const DRAFT_KEY = 'entry-draft-new';
@@ -71,6 +72,11 @@ export default function NewEntry() {
     const draft = loadDraft();
     return draft?.template || '';
   });
+  const [tags, setTags] = useState(() => {
+    if (editId) return [];
+    const draft = loadDraft();
+    return draft?.tags || [];
+  });
   const [loadingEntry, setLoadingEntry] = useState(!!editId);
   const [hasDraft, setHasDraft] = useState(() => {
     if (editId) return false;
@@ -95,7 +101,7 @@ export default function NewEntry() {
     }
 
     saveTimerRef.current = setTimeout(() => {
-      saveDraft({ title, date, content, template });
+      saveDraft({ title, date, content, template, tags });
       setHasDraft(true);
     }, DRAFT_DEBOUNCE_MS);
 
@@ -104,7 +110,7 @@ export default function NewEntry() {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [title, date, content, template, editId]);
+  }, [title, date, content, template, tags, editId]);
 
   useEffect(() => {
     if (editId) {
@@ -118,6 +124,7 @@ export default function NewEntry() {
         setTitle(entry.title);
         setDate(entry.date);
         setContent(entry.content);
+        setTags(entry.tags || []);
         setLoadingEntry(false);
       })();
     }
@@ -152,6 +159,7 @@ export default function NewEntry() {
         title: title.trim(),
         date,
         content: content.trim(),
+        tags,
       });
       if (success) navigate('/journal');
     } else {
@@ -159,6 +167,7 @@ export default function NewEntry() {
         title: title.trim(),
         date,
         content: content.trim(),
+        tags,
       });
       if (success) {
         clearDraft();
@@ -173,6 +182,7 @@ export default function NewEntry() {
     setDate(prefillDate || '');
     setContent('');
     setTemplate('');
+    setTags([]);
     setHasDraft(false);
   };
 
@@ -251,6 +261,9 @@ export default function NewEntry() {
 
           <label htmlFor="content">Content</label>
           <MarkdownEditor value={content} onChange={setContent} />
+
+          <label>Tags</label>
+          <TagInput tags={tags} onChange={setTags} placeholder="Add tags (press Enter or comma)" />
 
           <button className="btn primary" type="submit">
             {editId ? 'Update Entry' : 'Save Entry'}

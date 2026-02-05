@@ -77,16 +77,16 @@ ALTER TABLE journal_entries ADD COLUMN location_name TEXT;
 
 ---
 
-## Phase 3: Organization & Power Features
+## Phase 3: Organization & Power Features ✅ COMPLETE
 
 *Better content management at scale*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Tags/Categories | #6 | Tag input on entries/todos; filter chips on list pages |
-| [ ] | Export Data | #10 | Download buttons for JSON export of entries and todos |
-| [ ] | Keyboard Shortcuts | #11 | `N` = new entry, `T` = todos, `/` = focus search |
-| [ ] | Command Palette | #18 | Cmd+K overlay for quick navigation and actions |
+| [x] | Tags/Categories | #6 | Tag input on entries/todos; filter chips on list pages |
+| [x] | Export Data | #10 | Download buttons for JSON export of entries and todos |
+| [x] | Keyboard Shortcuts | #11 | `N` = new entry, `T` = todos, `/` = focus search |
+| [x] | Command Palette | #18 | Ctrl+K overlay for quick navigation and actions |
 
 **Database Changes:**
 ```sql
@@ -264,5 +264,9 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 2 | Entry Pinning | Complete |
 | 2026-02-05 | 2 | Calendar Heatmap | Complete |
 | 2026-02-05 | 2 | Streak Tracker | Complete |
+| 2026-02-05 | 3 | Tags/Categories | Complete |
+| 2026-02-05 | 3 | Export Data | Complete |
+| 2026-02-05 | 3 | Keyboard Shortcuts | Complete |
+| 2026-02-05 | 3 | Command Palette | Complete |
 
 *Update this table as features are completed.*

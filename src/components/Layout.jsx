@@ -1,10 +1,19 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import CommandPalette from './CommandPalette';
 
 export default function Layout() {
   const { session, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  useKeyboardShortcuts({
+    onOpenCommandPalette: () => setCommandPaletteOpen(true),
+    searchInputRef: null,
+  });
 
   return (
     <>
@@ -48,6 +57,16 @@ export default function Layout() {
                 Add Entry
               </NavLink>
             </li>
+            <li>
+              <button
+                className="command-palette-trigger"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Open command palette"
+                title="Command palette (Ctrl+K)"
+              >
+                <kbd>Ctrl</kbd><kbd>K</kbd>
+              </button>
+            </li>
             {session ? (
               <li>
                 <a
@@ -85,7 +104,14 @@ export default function Layout() {
       </main>
       <footer>
         <p>&copy; 2026 My Online Journal</p>
+        <p className="footer-shortcuts muted">
+          <kbd>N</kbd> new entry &middot; <kbd>T</kbd> todos &middot; <kbd>/</kbd> search &middot; <kbd>Ctrl+K</kbd> commands
+        </p>
       </footer>
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
     </>
   );
 }

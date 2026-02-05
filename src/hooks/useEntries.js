@@ -47,6 +47,7 @@ export function useEntries() {
         title: entry.title,
         date: entry.date,
         content: entry.content,
+        tags: entry.tags || [],
         pinned: false,
       });
 
@@ -59,13 +60,18 @@ export function useEntries() {
   };
 
   const updateEntry = async (id, fields) => {
+    const updateData = {
+      title: fields.title,
+      date: fields.date,
+      content: fields.content,
+    };
+    if (fields.tags !== undefined) {
+      updateData.tags = fields.tags;
+    }
+
     const { error } = await supabase
       .from('journal_entries')
-      .update({
-        title: fields.title,
-        date: fields.date,
-        content: fields.content,
-      })
+      .update(updateData)
       .eq('id', id);
 
     if (error) {

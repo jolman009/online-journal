@@ -32,6 +32,7 @@ export function useTodos() {
         user_id: user.id,
         text: todo.text,
         date: todo.date || null,
+        tags: todo.tags || [],
         completed: false,
       })
       .select()
