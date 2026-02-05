@@ -26,16 +26,16 @@ These features from the roadmap have been completed:
 
 ---
 
-## Phase 1: Core UX Polish
+## Phase 1: Core UX Polish ✅ COMPLETE
 
 *Foundation improvements that enhance daily usage*
 
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
-| [ ] | Entry Search | #1 | Debounced search bar on Journal page filtering entries by title and content |
-| [ ] | Overdue Todos | #5 | Red date badges for past-due incomplete items; "Overdue" section at top of Scheduled list |
-| [ ] | Auto-Save Drafts | #12 | Persist NewEntry form state to localStorage; restore on page load |
-| [ ] | Word Count | #13 | Live word counter below editor textarea |
+| [x] | Entry Search | #1 | Debounced search bar on Journal page filtering entries by title and content |
+| [x] | Overdue Todos | #5 | Red date badges for past-due incomplete items; "Overdue" section at top of Scheduled list |
+| [x] | Auto-Save Drafts | #12 | Persist NewEntry form state to localStorage; restore on page load |
+| [x] | Word Count | #13 | Live word counter below editor textarea |
 
 **Database Changes:** None
 
@@ -179,6 +179,9 @@ Start with **Phase 1** — highest impact-to-effort ratio, addresses core usabil
 
 | Date | Phase | Feature | Status |
 |------|-------|---------|--------|
-| — | — | — | — |
+| 2026-02-05 | 1 | Word Count | Complete |
+| 2026-02-05 | 1 | Overdue Todos | Complete |
+| 2026-02-05 | 1 | Entry Search | Complete |
+| 2026-02-05 | 1 | Auto-Save Drafts | Complete |
 
 *Update this table as features are completed.*

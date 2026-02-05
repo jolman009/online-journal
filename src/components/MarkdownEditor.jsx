@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { renderMarkdown } from '../utils/markdown';
 
 export default function MarkdownEditor({ value, onChange }) {
   const [activeTab, setActiveTab] = useState('write');
+
+  const wordCount = useMemo(() => {
+    if (!value || !value.trim()) return 0;
+    return value.split(/\s+/).filter(Boolean).length;
+  }, [value]);
 
   return (
     <>
@@ -21,6 +26,9 @@ export default function MarkdownEditor({ value, onChange }) {
         >
           Preview
         </button>
+        <span className="editor-tabs__word-count">
+          {wordCount} {wordCount === 1 ? 'word' : 'words'}
+        </span>
       </div>
       {activeTab === 'write' ? (
         <div className="editor-pane">

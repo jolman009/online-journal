@@ -686,12 +686,67 @@ nav a.is-active {
     border-bottom-color: var(--accent);
 }
 
+.editor-tabs__word-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding: 0.5rem 0;
+    font-weight: 500;
+}
+
 .editor-pane--preview {
     min-height: 420px;
     padding: 0.8rem;
     border: 1px solid var(--glass-6);
     border-radius: 10px;
     background: var(--panel);
+}
+
+/* ===== Draft Indicator ===== */
+
+.draft-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+}
+
+.draft-indicator__text {
+    color: var(--success-text);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.draft-indicator__text::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background: var(--success-text);
+    border-radius: 50%;
+}
+
+.draft-indicator__discard {
+    background: transparent;
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.draft-indicator__discard:hover {
+    background: var(--danger-bg);
 }
 
 .form-card {
@@ -1023,6 +1078,55 @@ input[type="password"]:focus {
     align-items: center;
 }
 
+/* ===== Journal Search ===== */
+
+.journal-search {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.journal-search__input {
+    width: 100%;
+    padding: 0.7rem 2.5rem 0.7rem 1rem;
+    font-size: 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-6);
+    background: var(--card);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.journal-search__input:focus {
+    outline: none;
+    border-color: var(--accent-focus-border);
+    box-shadow: 0 0 0 3px var(--accent-focus-ring);
+}
+
+.journal-search__input::placeholder {
+    color: var(--muted);
+}
+
+.journal-search__clear {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.journal-search__clear:hover {
+    color: var(--text);
+    background: var(--glass-3);
+}
+
 /* ===== Todo Components ===== */
 
 .todo-add-card {
@@ -1120,6 +1224,31 @@ input[type="password"]:focus {
     border: 1px solid var(--accent-badge-border);
     color: var(--accent);
     white-space: nowrap;
+}
+
+.todo-item__date-badge--overdue {
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+    color: var(--danger-text);
+}
+
+.todo-section--overdue {
+    margin-bottom: 1.5rem;
+}
+
+.todo-section__title--overdue {
+    color: var(--danger-text);
+}
+
+.todo-section__title--overdue::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--danger-text);
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
 }
 
 .todo-item__delete {

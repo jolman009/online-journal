@@ -24,8 +24,16 @@ export default function Todos() {
     }
   };
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().split('T')[0];
+
+  const overdue = todos
+    .filter(t => t.date !== null && !t.completed && t.date < todayStr)
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
   const scheduled = todos
-    .filter(t => t.date !== null)
+    .filter(t => t.date !== null && (t.completed || t.date >= todayStr))
     .sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
       return (a.date || '').localeCompare(b.date || '');
@@ -70,6 +78,24 @@ export default function Todos() {
           <button className="btn primary" type="submit">Add</button>
         </form>
       </section>
+
+      {overdue.length > 0 && (
+        <section className="todo-section todo-section--overdue">
+          <h3 className="todo-section__title todo-section__title--overdue">
+            Overdue ({overdue.length})
+          </h3>
+          <div className="todo-list" aria-live="polite">
+            {overdue.map(todo => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggle={toggleTodo}
+                onDelete={deleteTodo}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="todo-section">
         <h3 className="todo-section__title">Scheduled</h3>

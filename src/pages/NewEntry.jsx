@@ -1,7 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useEntries } from '../hooks/useEntries';
 import MarkdownEditor from '../components/MarkdownEditor';
+
+const DRAFT_DEBOUNCE_MS = 2500;
+const DRAFT_KEY = 'entry-draft-new';
+
+function loadDraft() {
+  try {
+    const stored = localStorage.getItem(DRAFT_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('Failed to load draft:', e);
+  }
+  return null;
+}
+
+function saveDraft(draft) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch (e) {
+    console.warn('Failed to save draft:', e);
+  }
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch (e) {
+    console.warn('Failed to clear draft:', e);
+  }
+}
 
 const TEMPLATES = {
   daily: `# Daily Entry\n\n## Morning Intention\nWhat is the one thing this day is for?\n\n- \n\n## Reading\nWhat did I read today? What stayed with me?\n\n- **Book / Article:**\n- **Pages:**\n- **Thought:**\n\n## Work / Craft\nWhat did I actually work on?\n\n- \n\n## Personal / Family\nMoments that mattered.\n\n- `,
@@ -20,11 +51,60 @@ export default function NewEntry() {
   const prefillDate = searchParams.get('date');
   const prefillTemplate = searchParams.get('template');
 
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState(prefillDate || '');
-  const [content, setContent] = useState('');
-  const [template, setTemplate] = useState('');
+  const [title, setTitle] = useState(() => {
+    if (editId) return '';
+    const draft = loadDraft();
+    return draft?.title || '';
+  });
+  const [date, setDate] = useState(() => {
+    if (editId) return '';
+    const draft = loadDraft();
+    return draft?.date || prefillDate || '';
+  });
+  const [content, setContent] = useState(() => {
+    if (editId) return '';
+    const draft = loadDraft();
+    return draft?.content || '';
+  });
+  const [template, setTemplate] = useState(() => {
+    if (editId) return '';
+    const draft = loadDraft();
+    return draft?.template || '';
+  });
   const [loadingEntry, setLoadingEntry] = useState(!!editId);
+  const [hasDraft, setHasDraft] = useState(() => {
+    if (editId) return false;
+    return loadDraft() !== null;
+  });
+
+  const saveTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (editId) return;
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    const hasContent = title.trim() || content.trim() || date;
+
+    if (!hasContent) {
+      clearDraft();
+      setHasDraft(false);
+      return;
+    }
+
+    saveTimerRef.current = setTimeout(() => {
+      saveDraft({ title, date, content, template });
+      setHasDraft(true);
+    }, DRAFT_DEBOUNCE_MS);
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [title, date, content, template, editId]);
 
   useEffect(() => {
     if (editId) {
@@ -80,8 +160,20 @@ export default function NewEntry() {
         date,
         content: content.trim(),
       });
-      if (success) navigate('/journal');
+      if (success) {
+        clearDraft();
+        navigate('/journal');
+      }
     }
+  };
+
+  const handleDiscardDraft = () => {
+    clearDraft();
+    setTitle('');
+    setDate(prefillDate || '');
+    setContent('');
+    setTemplate('');
+    setHasDraft(false);
   };
 
   if (loadingEntry) {
@@ -100,6 +192,20 @@ export default function NewEntry() {
         </div>
         <Link className="btn ghost" to="/journal">Back to journal</Link>
       </div>
+
+      {hasDraft && !editId && (
+        <div className="draft-indicator">
+          <span className="draft-indicator__text">Draft saved</span>
+          <button
+            type="button"
+            className="draft-indicator__discard"
+            onClick={handleDiscardDraft}
+          >
+            Discard draft
+          </button>
+        </div>
+      )}
+
       <section className="form-card">
         <form onSubmit={handleSubmit}>
           {!editId && (
