@@ -52,6 +52,11 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
             {MOOD_EMOJIS[entry.mood]}
           </span>
         )}
+        {entry.voiceNotes && entry.voiceNotes.length > 0 && entry.isDecrypted !== false && (
+          <span className="entry-card__voice-badge" title={`${entry.voiceNotes.length} voice note(s)`}>
+            🎤 {entry.voiceNotes.length}
+          </span>
+        )}
       </div>
       {entry.tags && entry.tags.length > 0 && entry.isDecrypted !== false && (
         <div className="entry-card__tags">

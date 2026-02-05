@@ -136,7 +136,7 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 | [x] | Animated Transitions | #19 | Smooth page transitions using framer-motion |
 | [ ] | Photo Attachments | NEW | Upload and embed photos in entries; image gallery view |
 | [ ] | Video Attachments | NEW | Embed video clips in entries; playback within app |
-| [ ] | Voice Notes | NEW | Record audio directly in app; transcription optional |
+| [x] | Voice Notes | NEW | Record audio directly in app; automatic transcription via Web Speech API |
 | [x] | Rich Text Toolbar | NEW | Formatting buttons (bold, italic, headers, lists, code, links) |
 
 **Database Changes:**
@@ -281,5 +281,6 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 7 | Pull-to-Refresh | Complete |
 | 2026-02-05 | 2 | Mood Tracking | Complete |
 | 2026-02-05 | 5 | Animated Transitions | Complete |
+| 2026-02-05 | 5 | Voice Notes | Complete |
 
 *Update this table as features are completed.*
