@@ -1,7 +1,66 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabase';
 import { deriveKeyFromPassword, generateSalt } from '../lib/crypto';
-import sodium from 'libsodium-wrappers'; // For constants like crypto_pwhash_OPSLIMIT_MODERATE
+import {
+  validatePassword,
+  calculateStrengthScore,
+  getStrengthInfo,
+  checkPasswordRules,
+  PASSWORD_RULES,
+} from '../utils/passwordStrength';
+import sodium from 'libsodium-wrappers';
+
+function PasswordStrengthMeter({ password }) {
+  const score = calculateStrengthScore(password);
+  const strengthInfo = getStrengthInfo(score);
+  const rules = checkPasswordRules(password);
+
+  return (
+    <div className="password-strength">
+      <div className="password-strength__bar-container">
+        <div
+          className="password-strength__bar"
+          style={{
+            width: `${score}%`,
+            backgroundColor: strengthInfo.color,
+          }}
+        />
+      </div>
+      <div className="password-strength__label" style={{ color: strengthInfo.color }}>
+        {password ? strengthInfo.label : 'Enter password'}
+      </div>
+
+      <ul className="password-strength__rules">
+        <li className={rules.minLength ? 'rule-met' : 'rule-unmet'}>
+          {rules.minLength ? '✓' : '○'} At least {PASSWORD_RULES.minLength} characters
+        </li>
+        <li className={rules.hasUppercase ? 'rule-met' : 'rule-unmet'}>
+          {rules.hasUppercase ? '✓' : '○'} One uppercase letter
+        </li>
+        <li className={rules.hasLowercase ? 'rule-met' : 'rule-unmet'}>
+          {rules.hasLowercase ? '✓' : '○'} One lowercase letter
+        </li>
+        <li className={rules.hasNumber ? 'rule-met' : 'rule-unmet'}>
+          {rules.hasNumber ? '✓' : '○'} One number
+        </li>
+        <li className={rules.hasSpecial ? 'rule-met' : 'rule-unmet'}>
+          {rules.hasSpecial ? '✓' : '○'} One special character
+        </li>
+        {password && !rules.notCommon && (
+          <li className="rule-unmet rule-warning">
+            ✗ Contains common password pattern
+          </li>
+        )}
+        {password && !rules.notSequential && (
+          <li className="rule-unmet rule-warning">
+            ✗ Contains sequential characters
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
 
 const MasterPasswordModal = ({ onClose }) => {
   const { user, encryptionKey, setEncryptionKey } = useAuth();
@@ -9,11 +68,9 @@ const MasterPasswordModal = ({ onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isSettingMode, setIsSettingMode] = useState(false); // True for setting, false for unlocking
+  const [isSettingMode, setIsSettingMode] = useState(false);
 
   useEffect(() => {
-    // Determine mode: if user has E2EE metadata, it's unlock mode. Otherwise, set mode.
-    // Assuming E2EE metadata is stored in user.user_metadata.e2ee_params
     if (user?.user_metadata?.e2ee_params) {
       setIsSettingMode(false);
     } else {
@@ -34,9 +91,12 @@ const MasterPasswordModal = ({ onClose }) => {
 
     try {
       if (isSettingMode) {
-        if (password.length < 8) { // Basic password strength check
-          throw new Error("Master password must be at least 8 characters long.");
+        // Validate password strength
+        const validation = validatePassword(password);
+        if (!validation.isValid) {
+          throw new Error(validation.errors[0]);
         }
+
         if (password !== confirmPassword) {
           throw new Error("Passwords do not match.");
         }
@@ -44,7 +104,6 @@ const MasterPasswordModal = ({ onClose }) => {
         const salt = generateSalt();
         const derivedKey = await deriveKeyFromPassword(password, salt);
 
-        // Store salt and KDF params in user metadata (Base64 encode salt for storage)
         const e2eeParams = {
           salt: sodium.to_base64(salt, sodium.base64_variants.ORIGINAL),
           opslimit: sodium.crypto_pwhash_OPSLIMIT_MODERATE,
@@ -61,9 +120,9 @@ const MasterPasswordModal = ({ onClose }) => {
         }
 
         setEncryptionKey(derivedKey);
-        onClose(); // Close modal on success
+        onClose();
 
-      } else { // Unlocking mode
+      } else {
         const e2eeParams = user.user_metadata.e2ee_params;
         if (!e2eeParams || !e2eeParams.salt) {
           throw new Error("E2EE parameters not found for user.");
@@ -73,12 +132,12 @@ const MasterPasswordModal = ({ onClose }) => {
         const derivedKey = await deriveKeyFromPassword(
           password,
           salt,
-          e2eeParams.opslimit, // Use stored parameters
+          e2eeParams.opslimit,
           e2eeParams.memlimit,
           e2eeParams.alg
         );
         setEncryptionKey(derivedKey);
-        onClose(); // Close modal on success
+        onClose();
       }
     } catch (err) {
       console.error("Master password action failed:", err);
@@ -89,9 +148,13 @@ const MasterPasswordModal = ({ onClose }) => {
   };
 
   if (encryptionKey) {
-    // If key is already set, don't show the modal
     return null;
   }
+
+  const validation = validatePassword(password);
+  const canSubmit = isSettingMode
+    ? validation.isValid && password === confirmPassword
+    : password.length > 0;
 
   return (
     <div className="master-password-modal-overlay">
@@ -112,10 +175,13 @@ const MasterPasswordModal = ({ onClose }) => {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete={isSettingMode ? "new-password" : "current-password"}
           />
 
           {isSettingMode && (
             <>
+              <PasswordStrengthMeter password={password} />
+
               <label htmlFor="confirm-master-password">Confirm Master Password:</label>
               <input
                 type="password"
@@ -124,13 +190,21 @@ const MasterPasswordModal = ({ onClose }) => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
                 required
+                autoComplete="new-password"
               />
+              {confirmPassword && password !== confirmPassword && (
+                <p className="password-mismatch">Passwords do not match</p>
+              )}
             </>
           )}
 
           {error && <p className="error-message">{error}</p>}
 
-          <button type="submit" className="btn primary" disabled={isLoading}>
+          <button
+            type="submit"
+            className="btn primary"
+            disabled={isLoading || !canSubmit}
+          >
             {isLoading ? "Deriving key..." : (isSettingMode ? "Set Master Password" : "Unlock")}
           </button>
           {!isSettingMode && (

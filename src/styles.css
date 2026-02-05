@@ -3407,3 +3407,162 @@ body.focus-mode .focus-hidden {
     padding: 0.35rem;
     text-align: center;
 }
+
+/* ===== Master Password Modal ===== */
+
+.master-password-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.master-password-modal {
+    background: var(--panel);
+    border: 1px solid var(--glass-6);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.master-password-modal h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+    color: var(--text-strong);
+}
+
+.master-password-modal .muted {
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.master-password-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.master-password-modal label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: -0.5rem;
+}
+
+.master-password-modal input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--glass-6);
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.2s ease;
+}
+
+.master-password-modal input[type="password"]:focus {
+    outline: none;
+    border-color: var(--accent-focus-border);
+    box-shadow: 0 0 0 3px var(--accent-focus-ring);
+}
+
+.master-password-modal .error-message {
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.master-password-modal .password-mismatch {
+    color: var(--danger-text);
+    font-size: 0.85rem;
+    margin: -0.5rem 0 0;
+}
+
+.master-password-modal .btn {
+    margin-top: 0.5rem;
+}
+
+.master-password-modal .btn.ghost {
+    margin-top: 0;
+}
+
+/* Password Strength Meter */
+
+.password-strength {
+    background: var(--glass-2);
+    border: 1px solid var(--glass-4);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.password-strength__bar-container {
+    height: 6px;
+    background: var(--glass-4);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.password-strength__bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.password-strength__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.password-strength__rules {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 1rem;
+    font-size: 0.8rem;
+}
+
+.password-strength__rules li {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.password-strength__rules .rule-met {
+    color: var(--success-text);
+}
+
+.password-strength__rules .rule-unmet {
+    color: var(--muted);
+}
+
+.password-strength__rules .rule-warning {
+    color: var(--danger-text);
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 500px) {
+    .master-password-modal {
+        padding: 1.5rem;
+    }
+
+    .password-strength__rules {
+        grid-template-columns: 1fr;
+    }
+}
