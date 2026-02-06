@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabase';
+import { addToSyncQueue } from '../lib/syncQueue';
 
 export function useTodos() {
   const [todos, setTodos] = useState([]);
@@ -7,20 +8,25 @@ export function useTodos() {
 
   const fetchTodos = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('todos')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('todos')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Failed to fetch todos:', error.message);
-      setTodos([]);
-    } else {
-      setTodos(data || []);
+      if (error) {
+        console.error('Failed to fetch todos:', error.message);
+        // Keep current state on network error so offline still shows data
+      } else {
+        setTodos(data || []);
+      }
+    } catch (err) {
+      console.error('Network error fetching todos:', err);
+      // Keep current in-memory state
     }
     setLoading(false);
-    return data || [];
+    return todos;
   }, []);
 
   // Real-time subscription
@@ -32,7 +38,13 @@ export function useTodos() {
         { event: '*', schema: 'public', table: 'todos' },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setTodos(prev => [payload.new, ...prev]);
+            // Don't duplicate if we already have it (optimistic add)
+            setTodos(prev => {
+              if (prev.some(t => t.id === payload.new.id)) {
+                return prev.map(t => t.id === payload.new.id ? payload.new : t);
+              }
+              return [payload.new, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setTodos(prev =>
               prev.map(t => (t.id === payload.new.id ? payload.new : t))
@@ -53,19 +65,28 @@ export function useTodos() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Get the highest sort_order and add 1
     const maxSortOrder = todos.reduce((max, t) => Math.max(max, t.sort_order || 0), 0);
+
+    const payload = {
+      user_id: user.id,
+      text: todo.text,
+      date: todo.date || null,
+      tags: todo.tags || [],
+      completed: false,
+      sort_order: maxSortOrder + 1,
+    };
+
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      const optimistic = { ...payload, id: tempId, created_at: new Date().toISOString(), _pending: true };
+      setTodos(prev => [optimistic, ...prev]);
+      addToSyncQueue({ type: 'INSERT', table: 'todos', payload });
+      return optimistic;
+    }
 
     const { data, error } = await supabase
       .from('todos')
-      .insert({
-        user_id: user.id,
-        text: todo.text,
-        date: todo.date || null,
-        tags: todo.tags || [],
-        completed: false,
-        sort_order: maxSortOrder + 1,
-      })
+      .insert(payload)
       .select()
       .single();
 
@@ -73,11 +94,16 @@ export function useTodos() {
       console.error('Failed to add todo:', error.message);
       return null;
     }
-    // Real-time will handle the state update
     return data;
   };
 
   const toggleTodo = async (id, completed) => {
+    if (!navigator.onLine) {
+      setTodos(prev => prev.map(t => t.id === id ? { ...t, completed, _pending: true } : t));
+      addToSyncQueue({ type: 'UPDATE', table: 'todos', payload: { completed }, id });
+      return true;
+    }
+
     const { error } = await supabase
       .from('todos')
       .update({ completed })
@@ -87,11 +113,16 @@ export function useTodos() {
       console.error('Failed to toggle todo:', error.message);
       return false;
     }
-    // Real-time will handle the state update
     return true;
   };
 
   const deleteTodo = async (id) => {
+    if (!navigator.onLine) {
+      setTodos(prev => prev.filter(t => t.id !== id));
+      addToSyncQueue({ type: 'DELETE', table: 'todos', id });
+      return true;
+    }
+
     const { error } = await supabase
       .from('todos')
       .delete()
@@ -101,7 +132,6 @@ export function useTodos() {
       console.error('Failed to delete todo:', error.message);
       return false;
     }
-    // Real-time will handle the state update
     return true;
   };
 
@@ -113,7 +143,14 @@ export function useTodos() {
       return [...reorderedTodos, ...unchanged];
     });
 
-    // Update each todo's sort_order in the database
+    if (!navigator.onLine) {
+      // Queue each sort order update
+      reorderedTodos.forEach((todo, index) => {
+        addToSyncQueue({ type: 'UPDATE', table: 'todos', payload: { sort_order: index }, id: todo.id });
+      });
+      return true;
+    }
+
     const updates = reorderedTodos.map((todo, index) =>
       supabase
         .from('todos')
@@ -126,7 +163,6 @@ export function useTodos() {
 
     if (hasError) {
       console.error('Failed to update sort order');
-      // Refetch to restore correct order
       fetchTodos();
       return false;
     }

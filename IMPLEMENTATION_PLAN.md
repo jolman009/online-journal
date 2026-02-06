@@ -238,7 +238,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 ### Dependencies
 - Phase 3 (Command Palette) benefits from Phase 1 (Search) being complete
 - Phase 4 (Encryption) should come before Phase 5 (Media) for secure storage
-- Phase 6 (Offline PWA) should come after Phase 4 (Error Boundaries)
+-c
 - Phase 6 (Push Reminders) requires PWA infrastructure
 - Phase 7 (Mobile) can be done in parallel with other phases
 

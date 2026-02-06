@@ -1,70 +1,89 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../supabase';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
-import { encryptData, decryptData } from '../lib/crypto'; // Import crypto utilities
+import { useAuth } from '../context/AuthContext';
+import { encryptData, decryptData } from '../lib/crypto';
+import { addToSyncQueue } from '../lib/syncQueue';
 
 export function useEntries() {
-  const { user, encryptionKey } = useAuth(); // Access user and encryptionKey from AuthContext
+  const { user, encryptionKey } = useAuth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const encryptionKeyRef = useRef(encryptionKey);
+  useEffect(() => {
+    encryptionKeyRef.current = encryptionKey;
+  }, [encryptionKey]);
+
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    // Fetch only non-sensitive data and encrypted_payload
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('id, user_id, date, pinned, created_at, updated_at, encrypted_payload') // Select encrypted_payload
-      .order('created_at', { ascending: false });
+    const currentKey = encryptionKeyRef.current;
 
-    if (error) {
-      console.error('Failed to fetch journal entries:', error.message);
-      setEntries([]);
-    } else {
-      // Decrypt entries if key is available
-      const decryptedEntries = await Promise.all(
-        (data || []).map(async (entry) => {
-          if (entry.encrypted_payload && encryptionKey) {
-            try {
-              const decrypted = await decryptData(JSON.parse(entry.encrypted_payload), encryptionKey);
-              return { ...entry, ...decrypted, encrypted_payload: undefined, isDecrypted: true }; // Merge decrypted data
-            } catch (decryptionError) {
-              console.error('Decryption failed for entry:', entry.id, decryptionError);
-              const errorMessage = decryptionError.message.includes('Failed to decrypt data')
-                ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
-                : decryptionError.message;
-              return {
-                ...entry,
-                content: '[Decryption Failed]',
-                title: '[Encrypted]',
-                tags: [],
-                encrypted_payload: undefined,
-                isDecrypted: false,
-                decryptionError: errorMessage,
-              };
+    try {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('id, user_id, date, pinned, created_at, encrypted_payload')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch journal entries:', error.message);
+        // Keep current in-memory state on error
+      } else {
+        const decryptedEntries = await Promise.all(
+          (data || []).map(async (entry) => {
+            if (entry.encrypted_payload && currentKey) {
+              try {
+                const decrypted = await decryptData(JSON.parse(entry.encrypted_payload), currentKey);
+                return { ...entry, ...decrypted, encrypted_payload: undefined, isDecrypted: true };
+              } catch (decryptionError) {
+                console.error('Decryption failed for entry:', entry.id, decryptionError);
+                const errorMessage = decryptionError.message.includes('Failed to decrypt data')
+                  ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
+                  : decryptionError.message;
+                return {
+                  ...entry,
+                  content: '[Decryption Failed]',
+                  title: '[Encrypted]',
+                  tags: [],
+                  encrypted_payload: undefined,
+                  isDecrypted: false,
+                  decryptionError: errorMessage,
+                };
+              }
             }
-          }
-          return { ...entry, isDecrypted: !entry.encrypted_payload }; // If no encrypted_payload, it's not encrypted
-        })
-      );
-      setEntries(decryptedEntries);
+            return { ...entry, isDecrypted: !entry.encrypted_payload };
+          })
+        );
+        setEntries(decryptedEntries);
+      }
+    } catch (err) {
+      console.error('Network error fetching entries:', err);
+      // Keep current in-memory state
     }
+
     setLoading(false);
-    return decryptedEntries || []; // Return decrypted entries
-  }, [encryptionKey]); // Depend on encryptionKey for re-fetching/re-decrypting
+    return entries;
+  }, []);
 
+  // Refetch entries when encryption key becomes available
+  useEffect(() => {
+    if (encryptionKey) {
+      fetchEntries();
+    }
+  }, [encryptionKey, fetchEntries]);
 
-  // Real-time subscription - will need to decrypt payload for new/updated entries
+  // Real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('entries-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'journal_entries' },
-        async (payload) => { // Make async to allow decryption
+        async (payload) => {
+          const currentKey = encryptionKeyRef.current;
           let processedEntry = payload.new;
-          if (processedEntry && processedEntry.encrypted_payload && encryptionKey) {
+          if (processedEntry && processedEntry.encrypted_payload && currentKey) {
             try {
-              const decrypted = await decryptData(JSON.parse(processedEntry.encrypted_payload), encryptionKey);
+              const decrypted = await decryptData(JSON.parse(processedEntry.encrypted_payload), currentKey);
               processedEntry = { ...processedEntry, ...decrypted, encrypted_payload: undefined, isDecrypted: true };
             } catch (decryptionError) {
               console.error('Real-time decryption failed for entry:', processedEntry.id, decryptionError);
@@ -85,9 +104,13 @@ export function useEntries() {
             processedEntry = { ...processedEntry, isDecrypted: !processedEntry.encrypted_payload };
           }
 
-
           if (payload.eventType === 'INSERT') {
-            setEntries(prev => [processedEntry, ...prev]);
+            setEntries(prev => {
+              if (prev.some(e => e.id === payload.new.id)) {
+                return prev.map(e => e.id === payload.new.id ? processedEntry : e);
+              }
+              return [processedEntry, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setEntries(prev =>
               prev.map(e => (e.id === payload.new.id ? processedEntry : e))
@@ -102,188 +125,230 @@ export function useEntries() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [encryptionKey]); // Depend on encryptionKey for real-time decryption
+  }, []);
 
+  const getEntryById = useCallback(async (id) => {
+    const currentKey = encryptionKeyRef.current;
 
-  const getEntryById = async (id) => {
-    const { data, error } = await supabase
+    // Check in-memory first (useful offline)
+    const cached = entries.find(e => e.id === id);
+    if (cached && cached.isDecrypted) return cached;
+
+    try {
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('id, user_id, date, pinned, created_at, encrypted_payload')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Failed to fetch entry:', error.message);
+        return cached || null;
+      }
+
+      if (data && data.encrypted_payload && currentKey) {
+        try {
+          const decrypted = await decryptData(JSON.parse(data.encrypted_payload), currentKey);
+          return { ...data, ...decrypted, encrypted_payload: undefined, isDecrypted: true };
+        } catch (decryptionError) {
+          console.error('Decryption failed for entry:', data.id, decryptionError);
+          const errorMessage = decryptionError.message.includes('Failed to decrypt data')
+            ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
+            : decryptionError.message;
+          return {
+            ...data,
+            content: '[Decryption Failed]',
+            title: '[Encrypted]',
+            tags: [],
+            encrypted_payload: undefined,
+            isDecrypted: false,
+            decryptionError: errorMessage,
+          };
+        }
+      }
+      return { ...data, isDecrypted: !data.encrypted_payload };
+    } catch (err) {
+      console.error('Network error fetching entry:', err);
+      return cached || null;
+    }
+  }, [entries]);
+
+  const addEntry = useCallback(async (entry) => {
+    const currentKey = encryptionKeyRef.current;
+    if (!user) return false;
+    if (!currentKey) {
+      alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
+      return false;
+    }
+
+    const sensitiveData = {
+      title: entry.title,
+      content: entry.content,
+      tags: entry.tags || [],
+      mood: entry.mood || null,
+      voiceNotes: entry.voiceNotes || [],
+    };
+
+    const { ciphertext, nonce } = await encryptData(sensitiveData, currentKey);
+    const encryptedPayload = JSON.stringify({ ciphertext, nonce });
+
+    const insertPayload = {
+      user_id: user.id,
+      date: entry.date,
+      pinned: entry.pinned || false,
+      encrypted_payload: encryptedPayload,
+    };
+
+    if (!navigator.onLine) {
+      const tempId = crypto.randomUUID();
+      const optimistic = {
+        ...insertPayload,
+        id: tempId,
+        created_at: new Date().toISOString(),
+        ...sensitiveData,
+        encrypted_payload: undefined,
+        isDecrypted: true,
+        _pending: true,
+      };
+      setEntries(prev => [optimistic, ...prev]);
+      addToSyncQueue({ type: 'INSERT', table: 'journal_entries', payload: insertPayload });
+      return true;
+    }
+
+    const { error } = await supabase
       .from('journal_entries')
-      .select('id, user_id, date, pinned, created_at, updated_at, encrypted_payload') // Select encrypted_payload
-      .eq('id', id)
-      .single();
+      .insert(insertPayload);
 
     if (error) {
-      console.error('Failed to fetch entry:', error.message);
-      return null;
+      console.error('Failed to save entry:', error.message);
+      alert('Failed to save entry. Please try again.');
+      return false;
+    }
+    return true;
+  }, [user]);
+
+  const updateEntry = useCallback(async (id, fields) => {
+    const currentKey = encryptionKeyRef.current;
+    if (!currentKey) {
+      alert('E2E encryption is not unlocked. Cannot update encrypted entry.');
+      return false;
     }
 
-    if (data && data.encrypted_payload && encryptionKey) {
-      try {
-        const decrypted = await decryptData(JSON.parse(data.encrypted_payload), encryptionKey);
-        return { ...data, ...decrypted, encrypted_payload: undefined, isDecrypted: true }; // Merge decrypted data
-      } catch (decryptionError) {
-        console.error('Decryption failed for entry:', data.id, decryptionError);
-        const errorMessage = decryptionError.message.includes('Failed to decrypt data')
-          ? 'Failed to decrypt entry. Possible incorrect master password or tampered data.'
-          : decryptionError.message;
-        return {
-          ...data,
-          content: '[Decryption Failed]',
-          title: '[Encrypted]',
-          tags: [],
-          encrypted_payload: undefined,
-          isDecrypted: false,
-          decryptionError: errorMessage,
-        };
-      }
+    const sensitiveData = {};
+    if (fields.title !== undefined) sensitiveData.title = fields.title;
+    if (fields.content !== undefined) sensitiveData.content = fields.content;
+    if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
+    if (fields.mood !== undefined) sensitiveData.mood = fields.mood;
+    if (fields.voiceNotes !== undefined) sensitiveData.voiceNotes = fields.voiceNotes;
+
+    const { ciphertext, nonce } = await encryptData(sensitiveData, currentKey);
+
+    const updateData = {
+      encrypted_payload: JSON.stringify({ ciphertext, nonce }),
+    };
+
+    if (fields.date !== undefined) updateData.date = fields.date;
+    if (fields.pinned !== undefined) updateData.pinned = fields.pinned;
+
+    if (!navigator.onLine) {
+      setEntries(prev => prev.map(e => e.id === id ? { ...e, ...fields, _pending: true } : e));
+      addToSyncQueue({ type: 'UPDATE', table: 'journal_entries', payload: updateData, id });
+      return true;
     }
-        return { ...data, isDecrypted: !data.encrypted_payload };
-      }; // This closing brace was missing, corrected here.
-    
-      const addEntry = async (entry) => {
-        if (!user) return false;
-        if (!encryptionKey) {
-          alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
-          return false;
-        }
-    
-        const sensitiveData = {
-          title: entry.title,
-          content: entry.content,
-          tags: entry.tags || [],
-          mood: entry.mood || null,
-          voiceNotes: entry.voiceNotes || [],
-        };
-    
-        const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
-    
-        const { error } = await supabase
-          .from('journal_entries')
-          .insert({
-            user_id: user.id,
-            date: entry.date,
-            pinned: entry.pinned || false, // Ensure pinned is passed
-            encrypted_payload: JSON.stringify({ ciphertext, nonce }), // Store encrypted payload
-            // Do NOT store title, content, tags directly
-          });
-    
-        if (error) {
-          console.error('Failed to save entry:', error.message);
-          alert('Failed to save entry. Please try again.');
-          return false;
-        }
-        // Real-time will handle the state update
-        return true;
-      };
-    
-      const updateEntry = async (id, fields) => {
-        if (!encryptionKey) {
-          alert('E2E encryption is not unlocked. Cannot update encrypted entry.');
-          return false;
-        }
-    
-        const sensitiveData = {};
-        if (fields.title !== undefined) sensitiveData.title = fields.title;
-        if (fields.content !== undefined) sensitiveData.content = fields.content;
-        if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
-        if (fields.mood !== undefined) sensitiveData.mood = fields.mood;
-        if (fields.voiceNotes !== undefined) sensitiveData.voiceNotes = fields.voiceNotes;
-    
-        const { ciphertext, nonce } = await encryptData(sensitiveData, encryptionKey);
-    
-        const updateData = {
-          encrypted_payload: JSON.stringify({ ciphertext, nonce }),
-        };
-    
-        if (fields.date !== undefined) updateData.date = fields.date;
-        if (fields.pinned !== undefined) updateData.pinned = fields.pinned; // Allow updating pinned state
-    
-        const { error } = await supabase
-          .from('journal_entries')
-          .update(updateData)
-          .eq('id', id);
-    
-        if (error) {
-          console.error('Failed to update entry:', error.message);
-          alert('Failed to update entry. Please try again.');
-          return false;
-        }
-        // Real-time will handle the state update
-        return true;
-      };
-    
-      const deleteEntry = async (id) => {
-        const { error } = await supabase
-          .from('journal_entries')
-          .delete()
-          .eq('id', id);
-    
-        if (error) {
-          console.error('Failed to delete entry:', error.message);
-          return false;
-        }
-        // Real-time will handle the state update
-        return true;
-      };
-    
-      const togglePin = async (id, currentPinned) => {
-        const { error } = await supabase
-          .from('journal_entries')
-          .update({ pinned: !currentPinned })
-          .eq('id', id);
 
-        if (error) {
-          console.error('Failed to toggle pin:', error.message);
-          return false;
-        }
-        // Real-time will handle the state update
-        return true;
-      };
+    const { error } = await supabase
+      .from('journal_entries')
+      .update(updateData)
+      .eq('id', id);
 
-      // Quick capture: auto-generate title from first line, auto-set date to today
-      const quickAddEntry = async (content, mood = null) => {
-        if (!user) return false;
-        if (!encryptionKey) {
-          alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
-          return false;
-        }
-
-        // Auto-generate title from first line or use date
-        const firstLine = content.split('\n')[0].trim();
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-        const formattedDate = today.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        });
-
-        // Use first line as title (truncate if too long), or fallback to date
-        let title = firstLine.slice(0, 50);
-        if (!title || title.length < 3) {
-          title = `Quick note - ${formattedDate}`;
-        } else if (firstLine.length > 50) {
-          title = title + '...';
-        }
-
-        return addEntry({
-          title,
-          date: dateStr,
-          content,
-          tags: [],
-          mood,
-          voiceNotes: [],
-        });
-      };
-
-      return {
-        entries,
-        loading,
-        fetchEntries,
-        getEntryById,
-        addEntry,
-        updateEntry,
-        deleteEntry,
-        togglePin,
-        quickAddEntry,
-      };
+    if (error) {
+      console.error('Failed to update entry:', error.message);
+      alert('Failed to update entry. Please try again.');
+      return false;
     }
+    return true;
+  }, []);
+
+  const deleteEntry = useCallback(async (id) => {
+    if (!navigator.onLine) {
+      setEntries(prev => prev.filter(e => e.id !== id));
+      addToSyncQueue({ type: 'DELETE', table: 'journal_entries', id });
+      return true;
+    }
+
+    const { error } = await supabase
+      .from('journal_entries')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete entry:', error.message);
+      return false;
+    }
+    return true;
+  }, []);
+
+  const togglePin = useCallback(async (id, currentPinned) => {
+    if (!navigator.onLine) {
+      setEntries(prev => prev.map(e => e.id === id ? { ...e, pinned: !currentPinned, _pending: true } : e));
+      addToSyncQueue({ type: 'UPDATE', table: 'journal_entries', payload: { pinned: !currentPinned }, id });
+      return true;
+    }
+
+    const { error } = await supabase
+      .from('journal_entries')
+      .update({ pinned: !currentPinned })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to toggle pin:', error.message);
+      return false;
+    }
+    return true;
+  }, []);
+
+  const quickAddEntry = useCallback(async (content, mood = null) => {
+    const currentKey = encryptionKeyRef.current;
+    if (!user) return false;
+    if (!currentKey) {
+      alert('E2E encryption is not unlocked. Cannot save encrypted entry.');
+      return false;
+    }
+
+    const firstLine = content.split('\n')[0].trim();
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    const formattedDate = today.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+
+    let title = firstLine.slice(0, 50);
+    if (!title || title.length < 3) {
+      title = `Quick note - ${formattedDate}`;
+    } else if (firstLine.length > 50) {
+      title = title + '...';
+    }
+
+    return addEntry({
+      title,
+      date: dateStr,
+      content,
+      tags: [],
+      mood,
+      voiceNotes: [],
+    });
+  }, [user, addEntry]);
+
+  return {
+    entries,
+    loading,
+    fetchEntries,
+    getEntryById,
+    addEntry,
+    updateEntry,
+    deleteEntry,
+    togglePin,
+    quickAddEntry,
+  };
+}

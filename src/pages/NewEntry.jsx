@@ -184,6 +184,7 @@ export default function NewEntry() {
         setVoiceNotes(entry.voiceNotes || []);
         setTemplate(''); // No template for existing entry
         setLoadingEntry(false);
+        setLoadingDraft(false); // No draft loading needed when editing
       } else {
         // Not editing, try to load draft
         const draft = await loadEncryptedDraft();

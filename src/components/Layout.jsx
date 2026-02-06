@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import CommandPalette from './CommandPalette';
 import BottomNav from './BottomNav';
+import OfflineBanner from './OfflineBanner';
 
 export default function Layout() {
   const { session, signOut } = useAuth();
@@ -106,6 +107,7 @@ export default function Layout() {
           </nav>
         </div>
       </header>
+      <OfflineBanner />
       <main className="shell">
         <Outlet />
       </main>

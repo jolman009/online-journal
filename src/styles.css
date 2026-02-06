@@ -3566,3 +3566,54 @@ body.focus-mode .focus-hidden {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── Offline Banner ── */
+.offline-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--danger-bg);
+    border-bottom: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 100;
+}
+
+.offline-banner--syncing {
+    background: var(--accent-bg);
+    border-bottom-color: var(--accent-border);
+    color: var(--accent);
+}
+
+.offline-banner__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger-text);
+    flex-shrink: 0;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.offline-banner__dot--syncing {
+    background: var(--accent);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.sync-pending-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--danger-bg-strong);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+}

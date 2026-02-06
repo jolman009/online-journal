@@ -1,12 +1,14 @@
-import sodium from 'libsodium-wrappers';
+import sodium from 'libsodium-wrappers-sumo';
 
-// Initialize libsodium (must be called before any libsodium function)
-const ensureLibsodiumReady = async () => {
-  if (sodium.sodium_is_primitive_supported('pwhash', 'argon2id13')) {
-    return; // Already ready or supported
-  }
-  await sodium.ready;
-};
+// Standard libsodium constants (these are fixed values per the libsodium spec)
+const SALT_BYTES = 16;        // crypto_pwhash_SALTBYTES
+const KEY_BYTES = 32;         // crypto_secretbox_KEYBYTES
+const NONCE_BYTES = 24;       // crypto_secretbox_NONCEBYTES
+
+// Export KDF parameters for storage in user metadata
+export const KDF_OPSLIMIT_MODERATE = 3;
+export const KDF_MEMLIMIT_MODERATE = 268435456; // 256 MB
+export const KDF_ALG_ARGON2ID13 = 2;
 
 /**
  * Derives a strong encryption key from a master password using Argon2id.
@@ -17,27 +19,16 @@ const ensureLibsodiumReady = async () => {
  * @throws {Error} If key derivation fails.
  */
 export const deriveKeyFromPassword = async (masterPassword, salt) => {
-  await ensureLibsodiumReady();
-
-  // Recommended parameters for Argon2id from libsodium documentation (or similar secure defaults)
-  // For production, these might need to be adjusted based on security requirements and hardware capabilities.
-  const OPSLIMIT = sodium.crypto_pwhash_OPSLIMIT_MODERATE; // Moderate operations limit
-  const MEMLIMIT = sodium.crypto_pwhash_MEMLIMIT_MODERATE; // Moderate memory limit
-  const ALG = sodium.crypto_pwhash_ALG_ARGON2ID13;
-
-  const KEYBYTES = sodium.crypto_secretbox_KEYBYTES; // 32 bytes for XSalsa20-Poly1305 key
-
-  const passwordBuf = sodium.from_string(masterPassword);
-  const derivedKey = new Uint8Array(KEYBYTES);
+  await sodium.ready;
 
   try {
-    await sodium.crypto_pwhash(
-      derivedKey,
-      passwordBuf,
+    const derivedKey = sodium.crypto_pwhash(
+      KEY_BYTES,
+      masterPassword,
       salt,
-      OPSLIMIT,
-      MEMLIMIT,
-      ALG
+      KDF_OPSLIMIT_MODERATE,
+      KDF_MEMLIMIT_MODERATE,
+      KDF_ALG_ARGON2ID13
     );
     return derivedKey;
   } catch (error) {
@@ -48,11 +39,27 @@ export const deriveKeyFromPassword = async (masterPassword, salt) => {
 
 /**
  * Generates a cryptographically secure random salt.
- * @returns {Uint8Array} A unique salt.
+ * @returns {Promise<Uint8Array>} A unique salt.
  */
-export const generateSalt = () => {
-  ensureLibsodiumReady();
-  return sodium.randombytes_buf(sodium.crypto_pwhash_SALTBYTES);
+export const generateSalt = async () => {
+  await sodium.ready;
+  return sodium.randombytes_buf(SALT_BYTES);
+};
+
+/**
+ * Converts Uint8Array to Base64 string.
+ */
+export const toBase64 = async (data) => {
+  await sodium.ready;
+  return sodium.to_base64(data, sodium.base64_variants.ORIGINAL);
+};
+
+/**
+ * Converts Base64 string to Uint8Array.
+ */
+export const fromBase64 = async (base64String) => {
+  await sodium.ready;
+  return sodium.from_base64(base64String, sodium.base64_variants.ORIGINAL);
 };
 
 /**
@@ -65,11 +72,11 @@ export const generateSalt = () => {
  * @returns {Promise<{ciphertext: string, nonce: string}>} A promise that resolves with the encrypted data and nonce as Base64 strings.
  */
 export const encryptData = async (data, key) => {
-  await ensureLibsodiumReady();
+  await sodium.ready;
 
   const plaintext = JSON.stringify(data);
   const plaintextBuf = sodium.from_string(plaintext);
-  const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+  const nonce = sodium.randombytes_buf(NONCE_BYTES);
 
   const ciphertextBuf = sodium.crypto_secretbox_easy(plaintextBuf, nonce, key);
 
@@ -89,7 +96,7 @@ export const encryptData = async (data, key) => {
  * @throws {Error} If decryption fails (e.g., incorrect key, tampered data).
  */
 export const decryptData = async ({ ciphertext, nonce }, key) => {
-  await ensureLibsodiumReady();
+  await sodium.ready;
 
   const ciphertextBuf = sodium.from_base64(ciphertext, sodium.base64_variants.ORIGINAL);
   const nonceBuf = sodium.from_base64(nonce, sodium.base64_variants.ORIGINAL);

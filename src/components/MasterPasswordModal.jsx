@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabase';
-import { deriveKeyFromPassword, generateSalt } from '../lib/crypto';
+import { deriveKeyFromPassword, generateSalt, toBase64, fromBase64, KDF_OPSLIMIT_MODERATE, KDF_MEMLIMIT_MODERATE, KDF_ALG_ARGON2ID13 } from '../lib/crypto';
 import {
   validatePassword,
   calculateStrengthScore,
@@ -9,7 +9,6 @@ import {
   checkPasswordRules,
   PASSWORD_RULES,
 } from '../utils/passwordStrength';
-import sodium from 'libsodium-wrappers';
 
 function PasswordStrengthMeter({ password }) {
   const score = calculateStrengthScore(password);
@@ -101,14 +100,14 @@ const MasterPasswordModal = ({ onClose }) => {
           throw new Error("Passwords do not match.");
         }
 
-        const salt = generateSalt();
+        const salt = await generateSalt();
         const derivedKey = await deriveKeyFromPassword(password, salt);
 
         const e2eeParams = {
-          salt: sodium.to_base64(salt, sodium.base64_variants.ORIGINAL),
-          opslimit: sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-          memlimit: sodium.crypto_pwhash_MEMLIMIT_MODERATE,
-          alg: sodium.crypto_pwhash_ALG_ARGON2ID13,
+          salt: await toBase64(salt),
+          opslimit: KDF_OPSLIMIT_MODERATE,
+          memlimit: KDF_MEMLIMIT_MODERATE,
+          alg: KDF_ALG_ARGON2ID13,
         };
 
         const { error: updateError } = await supabase.auth.updateUser({
@@ -128,7 +127,7 @@ const MasterPasswordModal = ({ onClose }) => {
           throw new Error("E2EE parameters not found for user.");
         }
 
-        const salt = sodium.from_base64(e2eeParams.salt, sodium.base64_variants.ORIGINAL);
+        const salt = await fromBase64(e2eeParams.salt);
         const derivedKey = await deriveKeyFromPassword(
           password,
           salt,
