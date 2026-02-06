@@ -17,7 +17,7 @@ This document tracks the phased implementation of features from PROJECT_FEATURES
 These features from the roadmap have been completed:
 
 | Feature | PR/Commit | Notes |
-|---------|-----------|-------|
+| --------- | ----------- | ------- |
 | React + Vite Migration | `05c38ea` | Full SPA architecture |
 | Edit & Delete Entries (#2) | `09e2373` | EntryCard with confirmation dialog |
 | Markdown Rendering (#4) | `05c38ea` | Write/Preview tabs in MarkdownEditor |
@@ -28,10 +28,10 @@ These features from the roadmap have been completed:
 
 ## Phase 1: Core UX Polish ✅ COMPLETE
 
-*Foundation improvements that enhance daily usage*
+### Foundation improvements that enhance daily usage
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Entry Search | #1 | Debounced search bar on Journal page filtering entries by title and content |
 | [x] | Overdue Todos | #5 | Red date badges for past-due incomplete items; "Overdue" section at top of Scheduled list |
 | [x] | Auto-Save Drafts | #12 | Persist NewEntry form state to localStorage; restore on page load |
@@ -50,10 +50,10 @@ These features from the roadmap have been completed:
 
 ## Phase 2: Gamification & Engagement (Core 3 ✅ COMPLETE)
 
-*Encourage consistent journaling habits*
+### Encourage consistent journaling habits
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Streak Tracker | #3 | Display current streak, longest streak, total entries on Home page |
 | [x] | Calendar Heatmap | #15 | Color intensity on calendar cells based on entry count per day |
 | [x] | Entry Pinning | #7 | Star/pin icon on entries; pinned entries sort to top |
@@ -82,10 +82,10 @@ ALTER TABLE journal_entries ADD COLUMN location_name TEXT;
 
 ## Phase 3: Organization & Power Features ✅ COMPLETE
 
-*Better content management at scale*
+### Better content management at scale
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Tags/Categories | #6 | Tag input on entries/todos; filter chips on list pages |
 | [x] | Export Data | #10 | Download buttons for JSON export of entries and todos |
 | [x] | Keyboard Shortcuts | #11 | `N` = new entry, `T` = todos, `/` = focus search |
@@ -109,10 +109,10 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 
 ## Phase 4: Performance, Reliability & Security (Core 3 ✅ COMPLETE)
 
-*Scale, stability, and data protection*
+### Scale, stability, and data protection
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Error Boundaries | #24 | Wrap pages with error boundary; show fallback UI on crash |
 | [x] | Code Splitting | #25 | Lazy load Calendar, Review, Todos pages (bundle reduced from 508KB to 421KB) |
 | [x] | Infinite Scroll | #23 | Load entries progressively as user scrolls (20 at a time) |
@@ -133,10 +133,10 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 
 ## Phase 5: Advanced Editor & Media (Editor ✅ COMPLETE)
 
-*Rich editing experience with multimedia support*
+### Rich editing experience with multimedia support
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Split-Pane Preview | #22 | Side-by-side editor with live markdown preview + synced scroll |
 | [x] | Undo/Redo | #21 | Ctrl+Z / Ctrl+Shift+Z support with 50-state history stack |
 | [x] | Animated Transitions | #19 | Smooth page transitions using framer-motion |
@@ -175,10 +175,10 @@ CREATE TABLE entry_attachments (
 
 ## Phase 6: Real-Time, Offline & Notifications (Core 2 ✅ COMPLETE)
 
-*Advanced sync and engagement capabilities*
+### Advanced sync and engagement capabilities
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Real-Time Sync | #17 | Supabase Realtime subscriptions for live updates across tabs/devices |
 | [x] | Offline PWA | #16 | Service worker, asset caching, background sync queue |
 | [x] | Drag-and-Drop Todos | #20 | Reorder inbox todos using @dnd-kit with sort_order persistence |
@@ -215,10 +215,10 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 
 ## Phase 7: Mobile Experience (Core 3 ✅ COMPLETE)
 
-*Optimized for on-the-go journaling*
+### Optimized for on-the-go journaling
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [x] | Mobile-First Redesign | NEW | Touch-optimized UI; larger tap targets (44x44px min) |
 | [x] | Responsive Navigation | NEW | Bottom tab bar on mobile (<768px); top nav hidden |
 | [x] | Quick Entry Widget | NEW | Floating action button on Journal page |
@@ -243,10 +243,10 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 
 ## Phase 8: Widget Wizard Integration
 
-*Embeddable widgets and customizable dashboard components*
+### Embeddable widgets and customizable dashboard components
 
 | Status | Feature | Ref | Description |
-|--------|---------|-----|-------------|
+| -------- | --------- | ----- | ------------- |
 | [ ] | Widget Builder | NEW | Visual drag-and-drop builder to create custom dashboard widgets |
 | [ ] | Streak Widget | NEW | Embeddable streak counter widget for external sites/blogs |
 | [ ] | Mood Chart Widget | NEW | Embeddable mood trend chart with configurable date ranges |
@@ -306,7 +306,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 ### Tech Stack Additions by Phase
 
 | Phase | New Dependencies |
-|-------|------------------|
+| ------- | ------------------ |
 | 1 | None |
 | 2 | chart.js or recharts (mood trends), Geolocation API |
 | 3 | cmdk (command palette) |
@@ -321,7 +321,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 ## Changelog
 
 | Date | Phase | Feature | Status |
-|------|-------|---------|--------|
+| ----------- | ------- | ------------- | --------- |
 | 2026-02-05 | 1 | Word Count | Complete |
 | 2026-02-05 | 1 | Overdue Todos | Complete |
 | 2026-02-05 | 1 | Entry Search | Complete |
