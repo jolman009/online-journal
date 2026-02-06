@@ -40,6 +40,7 @@ These features from the roadmap have been completed:
 **Database Changes:** None
 
 **Acceptance Criteria:**
+
 - Search filters entries as user types (300ms debounce)
 - Overdue todos visually distinct with red styling
 - Form content survives accidental refresh
@@ -60,6 +61,7 @@ These features from the roadmap have been completed:
 | [ ] | Location & Date Stamps | NEW | Auto-capture geolocation and timestamp; display on entry cards |
 
 **Database Changes:**
+
 ```sql
 ALTER TABLE journal_entries ADD COLUMN pinned BOOLEAN DEFAULT false;
 ALTER TABLE journal_entries ADD COLUMN mood INTEGER CHECK (mood >= 1 AND mood <= 5);
@@ -69,6 +71,7 @@ ALTER TABLE journal_entries ADD COLUMN location_name TEXT;
 ```
 
 **Acceptance Criteria:**
+
 - Streak resets if a day is missed
 - Heatmap shows 4 intensity levels (0, 1, 2, 3+ entries)
 - Pinned entries always appear first regardless of date sort
@@ -89,12 +92,14 @@ ALTER TABLE journal_entries ADD COLUMN location_name TEXT;
 | [x] | Command Palette | #18 | Ctrl+K overlay for quick navigation and actions |
 
 **Database Changes:**
+
 ```sql
 ALTER TABLE journal_entries ADD COLUMN tags TEXT[] DEFAULT '{}';
 ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 ```
 
 **Acceptance Criteria:**
+
 - Tags are comma-separated input, stored as array
 - Export produces valid JSON with all user data
 - Shortcuts work globally except when typing in inputs
@@ -117,6 +122,7 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 **Database Changes:** None (encryption happens client-side)
 
 **Acceptance Criteria:**
+
 - Component errors don't crash entire app
 - Initial bundle size reduced by 30%+
 - First 20 entries load immediately; more load on scroll
@@ -140,6 +146,7 @@ ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}';
 | [x] | Rich Text Toolbar | NEW | Formatting buttons (bold, italic, headers, lists, code, links) |
 
 **Database Changes:**
+
 ```sql
 CREATE TABLE entry_attachments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -156,6 +163,7 @@ CREATE TABLE entry_attachments (
 ```
 
 **Acceptance Criteria:**
+
 - Split pane responsive (stacks on mobile)
 - Undo/redo tracks last 50 states
 - Transitions are 200-300ms, interruptible
@@ -172,12 +180,13 @@ CREATE TABLE entry_attachments (
 | Status | Feature | Ref | Description |
 |--------|---------|-----|-------------|
 | [x] | Real-Time Sync | #17 | Supabase Realtime subscriptions for live updates across tabs/devices |
-| [ ] | Offline PWA | #16 | Service worker, asset caching, background sync queue |
+| [x] | Offline PWA | #16 | Service worker, asset caching, background sync queue |
 | [x] | Drag-and-Drop Todos | #20 | Reorder inbox todos using @dnd-kit with sort_order persistence |
 | [ ] | Push Reminders | NEW | Daily journaling reminders via push notifications; customizable time |
 | [ ] | Cross-Device Sync | NEW | Robust conflict resolution for edits made on multiple devices |
 
 **Database Changes:**
+
 ```sql
 ALTER TABLE todos ADD COLUMN sort_order INTEGER DEFAULT 0;
 
@@ -195,6 +204,7 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 ```
 
 **Acceptance Criteria:**
+
 - Changes sync across tabs/devices within 2 seconds
 - App works offline; queued changes sync on reconnect
 - Drag reorder persists to database
@@ -221,6 +231,7 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 **Database Changes:** None
 
 **Acceptance Criteria:**
+
 - All touch targets minimum 44x44px (WCAG guidelines)
 - Swipe left to delete, swipe right to edit entries
 - Bottom nav shows on screens < 768px; sidebar on larger screens
@@ -230,12 +241,62 @@ ALTER TABLE journal_entries ADD COLUMN version INTEGER DEFAULT 1;
 
 ---
 
+## Phase 8: Widget Wizard Integration
+
+*Embeddable widgets and customizable dashboard components*
+
+| Status | Feature | Ref | Description |
+|--------|---------|-----|-------------|
+| [ ] | Widget Builder | NEW | Visual drag-and-drop builder to create custom dashboard widgets |
+| [ ] | Streak Widget | NEW | Embeddable streak counter widget for external sites/blogs |
+| [ ] | Mood Chart Widget | NEW | Embeddable mood trend chart with configurable date ranges |
+| [ ] | Daily Prompt Widget | NEW | Rotating journaling prompts widget; customizable prompt packs |
+| [ ] | Goal Tracker Widget | NEW | Set journaling goals (entries/week); progress ring visualization |
+| [ ] | Quick Stats Widget | NEW | Configurable stat cards (total entries, avg words, top tags, etc.) |
+
+**Database Changes:**
+
+```sql
+CREATE TABLE widgets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  type TEXT NOT NULL CHECK (type IN ('streak', 'mood_chart', 'daily_prompt', 'goal_tracker', 'quick_stats')),
+  config JSONB DEFAULT '{}',
+  position INTEGER DEFAULT 0,
+  enabled BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE journaling_prompts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  text TEXT NOT NULL,
+  category TEXT DEFAULT 'general',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+**Acceptance Criteria:**
+
+- Widget builder allows drag-and-drop arrangement on a dashboard grid
+- Each widget is independently configurable (date range, colors, display options)
+- Streak widget shows current/longest streak with animated counter
+- Mood chart supports line/bar toggle and custom date ranges
+- Daily prompt rotates automatically; user can refresh or pin a prompt
+- Goal tracker shows weekly/monthly progress with celebration animation on completion
+- Quick stats widget supports selecting which metrics to display
+- All widgets respect E2EE — data decrypted client-side before rendering
+- Dashboard layout persists per user via `widgets` table
+
+---
+
 ## Implementation Notes
 
 ### Priority Order
+
 Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to **Phase 7** if mobile is the primary use case.
 
 ### Dependencies
+
 - Phase 3 (Command Palette) benefits from Phase 1 (Search) being complete
 - Phase 4 (Encryption) should come before Phase 5 (Media) for secure storage
 -c
@@ -243,6 +304,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 - Phase 7 (Mobile) can be done in parallel with other phases
 
 ### Tech Stack Additions by Phase
+
 | Phase | New Dependencies |
 |-------|------------------|
 | 1 | None |
@@ -252,6 +314,7 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 5 | framer-motion, Supabase Storage, MediaRecorder API |
 | 6 | vite-plugin-pwa, @dnd-kit/core, web-push |
 | 7 | None (CSS/React refactoring) |
+| 8 | @dnd-kit (widget grid), react-grid-layout or similar |
 
 ---
 
@@ -286,5 +349,8 @@ Phase 1 complete. Continue with **Phase 2** for engagement features, or jump to 
 | 2026-02-05 | 5 | Voice Notes | Complete |
 | 2026-02-05 | 7 | Quick Capture Modal | Complete |
 | 2026-02-05 | 7 | Focus/Zen Mode | Complete |
+| 2026-02-05 | 7 | Haptic Feedback | Complete |
+| 2026-02-05 | 4 | Master Password Strength | Complete |
+| 2026-02-05 | 6 | Offline PWA | Complete |
 
 *Update this table as features are completed.*
