@@ -31,6 +31,10 @@ export function useKeyboardShortcuts({ onOpenCommandPalette, searchInputRef }) {
         e.preventDefault();
         navigate('/todos');
         break;
+      case 'w':
+        e.preventDefault();
+        navigate('/?addWidget=1');
+        break;
       case '/':
         e.preventDefault();
         searchInputRef?.current?.focus();

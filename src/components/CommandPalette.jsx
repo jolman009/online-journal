@@ -7,11 +7,13 @@ const COMMANDS = [
   { id: 'todos', label: 'Go to Todos', shortcut: 'T', action: '/todos', category: 'Navigation' },
   { id: 'calendar', label: 'Go to Calendar', action: '/calendar', category: 'Navigation' },
   { id: 'review', label: 'Go to Weekly Review', action: '/review', category: 'Navigation' },
-  { id: 'home', label: 'Go to Home', action: '/', category: 'Navigation' },
+  { id: 'home', label: 'Go to Dashboard', action: '/', category: 'Navigation' },
   { id: 'daily', label: 'New Daily Entry', action: '/new-entry?template=daily', category: 'Templates' },
   { id: 'weekly', label: 'New Weekly Plan', action: '/new-entry?template=weekly', category: 'Templates' },
   { id: 'reflection', label: 'New Reflection', action: '/new-entry?template=reflection', category: 'Templates' },
   { id: 'book', label: 'New Book Notes', action: '/new-entry?template=book', category: 'Templates' },
+  { id: 'add-widget', label: 'Add Widget', shortcut: 'W', action: '/?addWidget=1', category: 'Dashboard' },
+  { id: 'edit-dashboard', label: 'Edit Dashboard', action: '/?editMode=1', category: 'Dashboard' },
 ];
 
 export default function CommandPalette({ isOpen, onClose }) {

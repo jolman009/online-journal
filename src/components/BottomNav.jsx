@@ -1,6 +1,9 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function BottomNav() {
+  const { session } = useAuth();
+
   return (
     <nav className="bottom-nav">
       <NavLink
@@ -9,7 +12,7 @@ export default function BottomNav() {
         end
       >
         <span className="bottom-nav__icon">🏠</span>
-        <span className="bottom-nav__label">Home</span>
+        <span className="bottom-nav__label">{session ? 'Dashboard' : 'Home'}</span>
       </NavLink>
       <NavLink
         to="/journal"
