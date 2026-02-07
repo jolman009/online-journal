@@ -6,6 +6,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import CommandPalette from './CommandPalette';
 import BottomNav from './BottomNav';
 import OfflineBanner from './OfflineBanner';
+import InstallPrompt from './InstallPrompt';
 
 export default function Layout() {
   const { session, signOut } = useAuth();
@@ -122,6 +123,7 @@ export default function Layout() {
         onClose={() => setCommandPaletteOpen(false)}
       />
       <BottomNav />
+      <InstallPrompt />
     </>
   );
 }
