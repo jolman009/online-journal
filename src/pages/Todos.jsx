@@ -94,9 +94,9 @@ export default function Todos() {
       setTodoText('');
       setTodoDate('');
       setTodoTags([]);
-      // Non-blocking calendar sync
+      // Non-blocking calendar sync, then refresh to show badge
       if (newTodo.date && gcalConnected) {
-        syncTodoToCalendar(newTodo);
+        syncTodoToCalendar(newTodo).then(() => fetchTodos());
       }
     }
   };
@@ -106,7 +106,7 @@ export default function Todos() {
     if (success && gcalConnected) {
       const todo = todos.find(t => t.id === id);
       if (todo?.date) {
-        syncTodoToCalendar({ ...todo, completed });
+        syncTodoToCalendar({ ...todo, completed }).then(() => fetchTodos());
       }
     }
     return success;
