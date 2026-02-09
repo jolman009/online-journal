@@ -111,7 +111,13 @@ export function useGoogleCalendar() {
           });
 
           if (error) {
-            console.error('Calendar sync failed:', error);
+            // Try to read the response body for details
+            try {
+              const body = await error.context?.json?.() || error.message;
+              console.error('Calendar sync failed:', body);
+            } catch {
+              console.error('Calendar sync failed:', error);
+            }
             resolve(null);
             return;
           }

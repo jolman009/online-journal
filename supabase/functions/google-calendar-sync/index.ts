@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
         } else if (!res.ok) {
           const errText = await res.text();
           console.error('Calendar update failed:', errText);
-          return new Response(JSON.stringify({ error: 'calendar_api_error' }), {
+          return new Response(JSON.stringify({ error: 'calendar_api_error', details: errText }), {
             status: 502,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
         if (!res.ok) {
           const errText = await res.text();
           console.error('Calendar create failed:', errText);
-          return new Response(JSON.stringify({ error: 'calendar_api_error' }), {
+          return new Response(JSON.stringify({ error: 'calendar_api_error', details: errText }), {
             status: 502,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
