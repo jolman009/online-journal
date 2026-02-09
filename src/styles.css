@@ -4338,3 +4338,51 @@ body.focus-mode .focus-hidden {
         bottom: 2rem;
     }
 }
+
+/* Google Calendar integration */
+.gcal-card {
+    margin-bottom: 1rem;
+}
+
+.gcal-card__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.gcal-card__info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.gcal-card__icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    display: flex;
+}
+
+.gcal-card__title {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-strong);
+}
+
+.gcal-card__status {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.btn--sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.todo-item__gcal-badge {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    opacity: 0.7;
+    flex-shrink: 0;
+}

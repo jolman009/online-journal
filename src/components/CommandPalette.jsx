@@ -14,6 +14,7 @@ const COMMANDS = [
   { id: 'book', label: 'New Book Notes', action: '/new-entry?template=book', category: 'Templates' },
   { id: 'add-widget', label: 'Add Widget', shortcut: 'W', action: '/?addWidget=1', category: 'Dashboard' },
   { id: 'edit-dashboard', label: 'Edit Dashboard', action: '/?editMode=1', category: 'Dashboard' },
+  { id: 'gcal-connect', label: 'Connect Google Calendar', action: '/todos?connectGcal=1', category: 'Integrations' },
 ];
 
 export default function CommandPalette({ isOpen, onClose }) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -13,20 +13,35 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../supabase';
 import { useTodos } from '../hooks/useTodos';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 import TodoItem from '../components/TodoItem';
 import SortableTodoItem from '../components/SortableTodoItem';
 import TagInput from '../components/TagInput';
 import TagFilter from '../components/TagFilter';
 import PullToRefresh from '../components/PullToRefresh';
+import GoogleCalendarConnect from '../components/GoogleCalendarConnect';
 import { exportTodos } from '../utils/export';
 
 export default function Todos() {
   const { todos, fetchTodos, addTodo, toggleTodo, deleteTodo, updateSortOrder } = useTodos();
+  const {
+    isConnected: gcalConnected,
+    syncing: gcalSyncing,
+    connect: gcalConnect,
+    disconnect: gcalDisconnect,
+    syncTodoToCalendar,
+    deleteTodoFromCalendar,
+    syncAllTodos,
+  } = useGoogleCalendar();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [todoText, setTodoText] = useState('');
   const [todoDate, setTodoDate] = useState('');
   const [todoTags, setTodoTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
+  const initialSyncDone = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -42,6 +57,26 @@ export default function Todos() {
   useEffect(() => {
     fetchTodos();
   }, []);
+
+  // Handle ?google=connected → refresh session + trigger initial sync
+  useEffect(() => {
+    if (searchParams.get('google') === 'connected' && !initialSyncDone.current) {
+      initialSyncDone.current = true;
+      setSearchParams({}, { replace: true });
+      // Refresh session to pick up new user_metadata.google_calendar_connected
+      supabase.auth.refreshSession().then(() => {
+        // Wait for todos to load then sync all
+        const timer = setTimeout(() => {
+          if (todos.length > 0) syncAllTodos(todos);
+        }, 500);
+        return () => clearTimeout(timer);
+      });
+    }
+    if (searchParams.get('connectGcal') === '1') {
+      setSearchParams({}, { replace: true });
+      gcalConnect();
+    }
+  }, [searchParams]);
 
   const handleRefresh = useCallback(async () => {
     await fetchTodos();
@@ -59,7 +94,31 @@ export default function Todos() {
       setTodoText('');
       setTodoDate('');
       setTodoTags([]);
+      // Non-blocking calendar sync
+      if (newTodo.date && gcalConnected) {
+        syncTodoToCalendar(newTodo);
+      }
     }
+  };
+
+  const handleToggle = async (id, completed) => {
+    const success = await toggleTodo(id, completed);
+    if (success && gcalConnected) {
+      const todo = todos.find(t => t.id === id);
+      if (todo?.date) {
+        syncTodoToCalendar({ ...todo, completed });
+      }
+    }
+    return success;
+  };
+
+  const handleDelete = async (id) => {
+    const todo = todos.find(t => t.id === id);
+    const success = await deleteTodo(id);
+    if (success && gcalConnected && todo) {
+      deleteTodoFromCalendar(todo);
+    }
+    return success;
   };
 
   const availableTags = useMemo(() => {
@@ -172,6 +231,13 @@ export default function Todos() {
         </div>
       </section>
 
+      <GoogleCalendarConnect
+        isConnected={gcalConnected}
+        syncing={gcalSyncing}
+        onConnect={gcalConnect}
+        onDisconnect={gcalDisconnect}
+      />
+
       <TagFilter
         availableTags={availableTags}
         selectedTags={selectedTags}
@@ -189,8 +255,8 @@ export default function Todos() {
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                onToggle={toggleTodo}
-                onDelete={deleteTodo}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
               />
             ))}
           </div>
@@ -207,8 +273,8 @@ export default function Todos() {
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                onToggle={toggleTodo}
-                onDelete={deleteTodo}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
               />
             ))
           )}
@@ -237,8 +303,8 @@ export default function Todos() {
                   <SortableTodoItem
                     key={todo.id}
                     todo={todo}
-                    onToggle={toggleTodo}
-                    onDelete={deleteTodo}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
                   />
                 ))
               )}
