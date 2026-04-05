@@ -21,6 +21,7 @@ const NewEntry = lazy(() => import('./pages/NewEntry'));
 const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const Todos = lazy(() => import('./pages/Todos'));
 const WeeklyReview = lazy(() => import('./pages/WeeklyReview'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function SuspenseWrapper({ children }) {
   return (
@@ -100,6 +101,16 @@ function AppContent() {
                 <ProtectedRoute>
                   <SuspenseWrapper>
                     <AnimatedPage><WeeklyReview /></AnimatedPage>
+                  </SuspenseWrapper>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SuspenseWrapper>
+                    <AnimatedPage><Settings /></AnimatedPage>
                   </SuspenseWrapper>
                 </ProtectedRoute>
               }

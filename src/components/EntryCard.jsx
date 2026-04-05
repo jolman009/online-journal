@@ -23,6 +23,11 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
     timeZone: 'UTC',
   });
 
+  const timeStr = entry.created_at ? new Date(entry.created_at).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }) : null;
+
   const handleDelete = async () => {
     const success = await onDelete(entry.id);
     if (success) {
@@ -46,7 +51,7 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
         <h3>{entry.isDecrypted === false ? 'Encrypted Entry' : entry.title}</h3>
       </div>
       <div className="entry-card__meta">
-        <time>{formattedDate}</time>
+        <time>{formattedDate}{timeStr && ` • ${timeStr}`}</time>
         {entry.mood && entry.isDecrypted !== false && (
           <span className="entry-card__mood" title={`Mood: ${entry.mood}/5`}>
             {MOOD_EMOJIS[entry.mood]}
@@ -55,6 +60,11 @@ export default function EntryCard({ entry, onDelete, onTogglePin }) {
         {entry.voiceNotes && entry.voiceNotes.length > 0 && entry.isDecrypted !== false && (
           <span className="entry-card__voice-badge" title={`${entry.voiceNotes.length} voice note(s)`}>
             🎤 {entry.voiceNotes.length}
+          </span>
+        )}
+        {entry.location && entry.isDecrypted !== false && (
+          <span className="entry-card__location" title={entry.location.name}>
+            📍 {entry.location.name}
           </span>
         )}
       </div>

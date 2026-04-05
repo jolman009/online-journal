@@ -187,6 +187,7 @@ export function useEntries() {
       tags: entry.tags || [],
       mood: entry.mood || null,
       voiceNotes: entry.voiceNotes || [],
+      location: entry.location || null,
     };
 
     const { ciphertext, nonce } = await encryptData(sensitiveData, currentKey);
@@ -240,6 +241,7 @@ export function useEntries() {
     if (fields.tags !== undefined) sensitiveData.tags = fields.tags;
     if (fields.mood !== undefined) sensitiveData.mood = fields.mood;
     if (fields.voiceNotes !== undefined) sensitiveData.voiceNotes = fields.voiceNotes;
+    if (fields.location !== undefined) sensitiveData.location = fields.location;
 
     const { ciphertext, nonce } = await encryptData(sensitiveData, currentKey);
 

@@ -43,6 +43,8 @@ export default function NewEntry() {
   const [template, setTemplate] = useState('');
   const [tags, setTags] = useState([]);
   const [mood, setMood] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const [voiceNotes, setVoiceNotes] = useState([]);
   const [loadingEntry, setLoadingEntry] = useState(!!editId);
   const [hasDraft, setHasDraft] = useState(false);
@@ -58,6 +60,48 @@ export default function NewEntry() {
   });
 
   const saveTimerRef = useRef(null);
+
+  const handleDetectLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Simple reverse geocoding via Nominatim (OSM)
+          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10`);
+          const data = await response.json();
+          const locationName = data.address.city || data.address.town || data.address.village || data.address.suburb || 'Unknown Location';
+          
+          setLocation({
+            lat: latitude,
+            lng: longitude,
+            name: locationName
+          });
+          triggerHaptic();
+        } catch (error) {
+          console.error('Error fetching location name:', error);
+          setLocation({
+            lat: latitude,
+            lng: longitude,
+            name: `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`
+          });
+          triggerHaptic();
+        } finally {
+          setDetectingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Error detecting location:', error);
+        alert('Failed to detect location. Please ensure location services are enabled.');
+        setDetectingLocation(false);
+      }
+    );
+  }, [triggerHaptic]);
 
   // Focus mode: toggle body class and persist to localStorage
   const toggleFocusMode = useCallback(() => {
@@ -181,6 +225,7 @@ export default function NewEntry() {
         setContent(entry.content);
         setTags(entry.tags || []);
         setMood(entry.mood || null);
+        setLocation(entry.location || null);
         setVoiceNotes(entry.voiceNotes || []);
         setTemplate(''); // No template for existing entry
         setLoadingEntry(false);
@@ -195,6 +240,7 @@ export default function NewEntry() {
           setTemplate(draft.template || '');
           setTags(draft.tags || []);
           setMood(draft.mood || null);
+          setLocation(draft.location || null);
           setVoiceNotes(draft.voiceNotes || []);
         } else {
           // No draft, set defaults
@@ -204,6 +250,7 @@ export default function NewEntry() {
           setTemplate('');
           setTags([]);
           setMood(null);
+          setLocation(null);
           setVoiceNotes([]);
         }
         setLoadingEntry(false);
@@ -229,7 +276,7 @@ export default function NewEntry() {
       clearTimeout(saveTimerRef.current);
     }
 
-    const hasContent = title.trim() || content.trim() || date || tags.length > 0 || mood !== null || voiceNotes.length > 0;
+    const hasContent = title.trim() || content.trim() || date || tags.length > 0 || mood !== null || location !== null || voiceNotes.length > 0;
 
     if (!hasContent) {
       clearDraft();
@@ -238,7 +285,7 @@ export default function NewEntry() {
     }
 
     saveTimerRef.current = setTimeout(async () => { // Made async here
-      await saveEncryptedDraft({ title, date, content, template, tags, mood, voiceNotes });
+      await saveEncryptedDraft({ title, date, content, template, tags, mood, location, voiceNotes });
       // setHasDraft(true); // Handled inside saveEncryptedDraft
     }, DRAFT_DEBOUNCE_MS);
 
@@ -247,7 +294,7 @@ export default function NewEntry() {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [title, date, content, template, tags, mood, voiceNotes, editId, saveEncryptedDraft, clearDraft]);
+  }, [title, date, content, template, tags, mood, location, voiceNotes, editId, saveEncryptedDraft, clearDraft]);
 
 
   const handleTemplateChange = (e) => {
@@ -279,6 +326,7 @@ export default function NewEntry() {
         content: content.trim(),
         tags,
         mood,
+        location,
         voiceNotes,
       });
       if (success) {
@@ -293,6 +341,7 @@ export default function NewEntry() {
         content: content.trim(),
         tags,
         mood,
+        location,
         voiceNotes,
       });
       if (success) {
@@ -311,6 +360,7 @@ export default function NewEntry() {
     setTemplate('');
     setTags([]);
     setMood(null);
+    setLocation(null);
     setVoiceNotes([]);
     setHasDraft(false);
   };
@@ -434,6 +484,33 @@ export default function NewEntry() {
               onChange={setVoiceNotes}
               onTranscript={(text) => setContent(prev => prev + '\n\n> ' + text)}
             />
+          </div>
+
+          <div className={focusMode ? 'focus-hidden' : ''}>
+            <label>Location</label>
+            <div className="location-control">
+              {location ? (
+                <div className="location-display">
+                  <span className="location-display__name">📍 {location.name}</span>
+                  <button 
+                    type="button" 
+                    className="location-display__clear"
+                    onClick={() => setLocation(null)}
+                  >
+                    Clear
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  type="button" 
+                  className={`btn ghost location-btn${detectingLocation ? ' location-btn--loading' : ''}`}
+                  onClick={handleDetectLocation}
+                  disabled={detectingLocation}
+                >
+                  {detectingLocation ? 'Detecting...' : '📍 Detect Location'}
+                </button>
+              )}
+            </div>
           </div>
 
           <div className={focusMode ? 'focus-hidden' : ''}>

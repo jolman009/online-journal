@@ -15,6 +15,7 @@ export default function WidgetGrid({
   editMode,
   onRemoveWidget,
   onSettingsWidget,
+  onUpdateWidget,
   onLayoutChange,
 }) {
   const { containerRef, width } = useContainerWidth({ initialWidth: 1100 });
@@ -75,6 +76,7 @@ export default function WidgetGrid({
                     config={widget.config || {}}
                     entries={entries}
                     todos={todos}
+                    onUpdateConfig={(config) => onUpdateWidget?.(widget.id, { config })}
                   />
                 </Suspense>
               </WidgetShell>

@@ -3056,6 +3056,70 @@ input[type="password"]:focus {
     color: var(--accent);
 }
 
+.entry-card__location {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    background: var(--accent-badge-bg);
+    border: 1px solid var(--accent-badge-border);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+/* Location Control in New Entry */
+.location-control {
+    margin-top: 0.25rem;
+}
+
+.location-btn {
+    width: auto;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+.location-btn--loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.location-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    background: var(--glass-3);
+    border: 1px solid var(--glass-5);
+    border-radius: var(--radius);
+}
+
+.location-display__name {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.location-display__clear {
+    background: transparent;
+    border: none;
+    color: var(--danger-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    transition: background 0.15s ease;
+}
+
+.location-display__clear:hover {
+    background: var(--danger-bg);
+}
+
 @media (max-width: 480px) {
     .voice-recorder__controls {
         flex-direction: column;

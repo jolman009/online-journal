@@ -57,6 +57,13 @@ export default function Layout() {
                   Review
                 </NavLink>
               </li>
+              {session && (
+                <li>
+                  <NavLink to="/settings" className={({ isActive }) => isActive ? 'is-active' : ''}>
+                    Settings
+                  </NavLink>
+                </li>
+              )}
               <li>
                 <NavLink
                   to="/new-entry"

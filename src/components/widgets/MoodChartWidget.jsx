@@ -36,9 +36,9 @@ function MoodTooltip({ active, payload }) {
   );
 }
 
-export default function MoodChartWidget({ config, entries }) {
-  const [chartType, setChartType] = useState(config.chartType || 'line');
-  const [range, setRange] = useState(config.range || 30);
+export default function MoodChartWidget({ config, entries, onUpdateConfig }) {
+  const chartType = config.chartType || 'line';
+  const range = config.range || 30;
   const data = useMoodData(entries, range);
 
   const formattedData = useMemo(() => {
@@ -61,13 +61,13 @@ export default function MoodChartWidget({ config, entries }) {
       <div className="mood-chart-widget__controls">
         <button
           className={`mood-chart-widget__toggle${chartType === 'line' ? ' mood-chart-widget__toggle--active' : ''}`}
-          onClick={() => setChartType('line')}
+          onClick={() => onUpdateConfig({ ...config, chartType: 'line' })}
         >
           Line
         </button>
         <button
           className={`mood-chart-widget__toggle${chartType === 'bar' ? ' mood-chart-widget__toggle--active' : ''}`}
-          onClick={() => setChartType('bar')}
+          onClick={() => onUpdateConfig({ ...config, chartType: 'bar' })}
         >
           Bar
         </button>
@@ -76,7 +76,7 @@ export default function MoodChartWidget({ config, entries }) {
           <button
             key={r.days}
             className={`mood-chart-widget__toggle${range === r.days ? ' mood-chart-widget__toggle--active' : ''}`}
-            onClick={() => setRange(r.days)}
+            onClick={() => onUpdateConfig({ ...config, range: r.days })}
           >
             {r.label}
           </button>

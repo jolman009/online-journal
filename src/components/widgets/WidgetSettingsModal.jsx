@@ -7,6 +7,8 @@ const STAT_OPTIONS = [
   { value: 'completion_rate', label: 'Completion Rate' },
   { value: 'avg_mood', label: 'Average Mood' },
   { value: 'entries_this_month', label: 'Entries This Month' },
+  { value: 'avg_word_count', label: 'Avg Word Count' },
+  { value: 'top_tags', label: 'Top Tags' },
 ];
 
 export default function WidgetSettingsModal({ widget, isOpen, onClose, onSave }) {

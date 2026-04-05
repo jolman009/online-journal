@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSecurity } from '../hooks/useSecurity'; // Import useSecurity
 import { supabase } from '../supabase';
 import { deriveKeyFromPassword, generateSalt, toBase64, fromBase64, KDF_OPSLIMIT_MODERATE, KDF_MEMLIMIT_MODERATE, KDF_ALG_ARGON2ID13 } from '../lib/crypto';
 import {
@@ -63,8 +64,17 @@ function PasswordStrengthMeter({ password }) {
 
 const MasterPasswordModal = ({ onClose }) => {
   const { user, encryptionKey, setEncryptionKey } = useAuth();
+  const { 
+    pinEnabled, 
+    biometricsEnabled, 
+    unlockWithPIN, 
+    unlockWithBiometrics,
+    loading: securityLoading 
+  } = useSecurity();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [pin, setPin] = useState('');
+  const [showPinEntry, setShowPinEntry] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSettingMode, setIsSettingMode] = useState(false);
@@ -78,7 +88,7 @@ const MasterPasswordModal = ({ onClose }) => {
   }, [user]);
 
   const handleAction = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
     setIsLoading(true);
 
@@ -146,7 +156,34 @@ const MasterPasswordModal = ({ onClose }) => {
     }
   };
 
-  if (encryptionKey) {
+  const handlePinUnlock = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+    try {
+      await unlockWithPIN(pin);
+      onClose();
+    } catch (err) {
+      setError('Incorrect PIN. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBiometricUnlock = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      await unlockWithBiometrics();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (encryptionKey || securityLoading) {
     return null;
   }
 
@@ -165,54 +202,115 @@ const MasterPasswordModal = ({ onClose }) => {
             : "Enter your master password to decrypt your journal entries."}
         </p>
 
-        <form onSubmit={handleAction}>
-          <label htmlFor="master-password">Master Password:</label>
-          <input
-            type="password"
-            id="master-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            required
-            autoComplete={isSettingMode ? "new-password" : "current-password"}
-          />
+        {showPinEntry ? (
+          <form onSubmit={handlePinUnlock}>
+            <label htmlFor="pin-code">Enter PIN:</label>
+            <input
+              type="password"
+              id="pin-code"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              disabled={isLoading}
+              required
+              autoComplete="one-time-code"
+              maxLength={6}
+              autoFocus
+            />
+            {error && <p className="error-message">{error}</p>}
+            <div className="modal-actions">
+              <button type="submit" className="btn primary" disabled={isLoading || pin.length < 4}>
+                {isLoading ? "Unlocking..." : "Unlock with PIN"}
+              </button>
+              <button type="button" className="btn ghost" onClick={() => setShowPinEntry(false)}>
+                Back to Password
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleAction}>
+            <label htmlFor="master-password">Master Password:</label>
+            <input
+              type="password"
+              id="master-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              autoComplete={isSettingMode ? "new-password" : "current-password"}
+            />
 
-          {isSettingMode && (
-            <>
-              <PasswordStrengthMeter password={password} />
+            {isSettingMode && (
+              <>
+                <PasswordStrengthMeter password={password} />
 
-              <label htmlFor="confirm-master-password">Confirm Master Password:</label>
-              <input
-                type="password"
-                id="confirm-master-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-                required
-                autoComplete="new-password"
-              />
-              {confirmPassword && password !== confirmPassword && (
-                <p className="password-mismatch">Passwords do not match</p>
+                <label htmlFor="confirm-master-password">Confirm Master Password:</label>
+                <input
+                  type="password"
+                  id="confirm-master-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLoading}
+                  required
+                  autoComplete="new-password"
+                />
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="password-mismatch">Passwords do not match</p>
+                )}
+              </>
+            )}
+
+            {error && <p className="error-message">{error}</p>}
+
+            <div className="modal-actions">
+              <button
+                type="submit"
+                className="btn primary"
+                disabled={isLoading || !canSubmit}
+              >
+                {isLoading ? "Deriving key..." : (isSettingMode ? "Set Master Password" : "Unlock")}
+              </button>
+              
+              {!isSettingMode && (
+                <div className="alternative-unlocks">
+                  {biometricsEnabled && (
+                    <button type="button" className="btn ghost" onClick={handleBiometricUnlock} disabled={isLoading}>
+                      Unlock with Face/Touch ID
+                    </button>
+                  )}
+                  {pinEnabled && (
+                    <button type="button" className="btn ghost" onClick={() => setShowPinEntry(true)} disabled={isLoading}>
+                      Unlock with PIN
+                    </button>
+                  )}
+                </div>
               )}
-            </>
-          )}
-
-          {error && <p className="error-message">{error}</p>}
-
-          <button
-            type="submit"
-            className="btn primary"
-            disabled={isLoading || !canSubmit}
-          >
-            {isLoading ? "Deriving key..." : (isSettingMode ? "Set Master Password" : "Unlock")}
-          </button>
-          {!isSettingMode && (
-            <button type="button" className="btn ghost" onClick={onClose} disabled={isLoading}>
-              Skip for Now (Journal will be locked)
-            </button>
-          )}
-        </form>
+              
+              {!isSettingMode && (
+                <button type="button" className="btn ghost" onClick={onClose} disabled={isLoading}>
+                  Skip for Now (Journal will be locked)
+                </button>
+              )}
+            </div>
+          </form>
+        )}
       </div>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .modal-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 1.5rem;
+        }
+        .alternative-unlocks {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: center;
+        }
+        .alternative-unlocks .btn {
+          flex: 1;
+          font-size: 0.85rem;
+        }
+      `}} />
     </div>
   );
 };

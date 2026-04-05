@@ -17,12 +17,31 @@ export default function QuickStatsWidget({ config, entries, todos }) {
       : '—';
     const entriesThisMonth = entries.filter(e => e.date && e.date >= monthStart).length;
 
+    // Word count calculation
+    const totalWords = entries.reduce((sum, e) => {
+      const words = (e.content || '').trim().split(/\s+/).filter(Boolean).length;
+      return sum + words;
+    }, 0);
+    const avgWordCount = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
+
+    // Top tags calculation
+    const tagCounts = {};
+    entries.forEach(e => {
+      (e.tags || []).forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+    const topTag = Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+
     return {
       total_entries: { value: totalEntries, label: 'Entries' },
       total_todos: { value: totalTodos, label: 'Todos' },
       completion_rate: { value: `${completionRate}%`, label: 'Completed' },
       avg_mood: { value: avgMood, label: 'Avg Mood' },
       entries_this_month: { value: entriesThisMonth, label: 'This Month' },
+      avg_word_count: { value: avgWordCount, label: 'Avg Words' },
+      top_tags: { value: topTag, label: 'Top Tag' },
     };
   }, [entries, todos]);
 

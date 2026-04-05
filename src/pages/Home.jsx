@@ -156,6 +156,7 @@ export default function Home() {
         editMode={editMode}
         onRemoveWidget={handleRemoveWidget}
         onSettingsWidget={setSettingsWidget}
+        onUpdateWidget={updateWidget}
         onLayoutChange={updateLayouts}
       />
 
